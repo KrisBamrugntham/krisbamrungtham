@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500" persistent>
+  <v-dialog v-model="dialog" max-width="500" >
     <v-card elevation="3" class="pa-6">
       <v-card-title class="headline font-weight-bold mb-2">สมัครสมาชิก Edukris</v-card-title>
-      <v-form ref="form" v-model="valid" lazy-validation>
+      <v-form ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <v-text-field
           v-model="form.name"
           :rules="[v => !!v || 'กรุณากรอกชื่อ']"
@@ -51,11 +51,20 @@
           color="primary"
           class="mt-4"
           large
-          @click="submit()"
+          block
+          type="submit"
           :disabled="!valid"
         >
           ลงทะเบียน
         </v-btn>
+
+        <div class="text-center mt-6">
+          <span>มีบัญชีแล้ว? </span>
+          <a href="#" @click.prevent="$emit('switch-to-login')">
+            Sign in
+          </a>
+        </div>
+
         <v-alert
           v-if="error"
           type="error"
@@ -144,10 +153,9 @@ export default {
           password: this.form.password,
           gender: this.form.gender,
           interests: this.form.interests.join(','),
-          avatar_url: 'ssdfefsef'
+          avatar_url: 'default.png'
         };
         try {
-          // ใช้ this.$axios.post และเรียกใช้ path แค่ '/insert.php'
           const res = await this.$axios.post('/insert.php', payload);
           const data = res.data;
           
@@ -157,19 +165,30 @@ export default {
             localStorage.setItem('edukris_email', this.form.email)
             localStorage.setItem('edukris_gender', this.form.gender)
             localStorage.setItem('edukris_interests', this.form.interests.join(','))
+            
+            window.dispatchEvent(new Event('storage'));
+
             setTimeout(() => {
               this.dialog = false
               this.$router.push('/index-login')
             }, 1200)
           } else {
             this.error = data.error || 'เกิดข้อผิดพลาดในการลงทะเบียน';
+            if(data.details) {
+              console.error("Server Error Details:", data.details);
+              this.error += ` (Details: ${data.details})`;
+            }
           }
         } catch (err) {
-          this.error = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+            this.error = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+            console.error(err);
         }
       }
     },
     resetForm() {
+      if (this.$refs.form) {
+        this.$refs.form.resetValidation();
+      }
       this.valid = false;
       this.success = false;
       this.form = {

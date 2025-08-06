@@ -6,7 +6,7 @@
           Transform Your Future with Education
         </h1>
         <p class="text-h5 mb-6">
-          Discover a world of knowledge and unlock your potential with our innovative learning platform.
+          เข้าสู่ระบบด้วย Admin@gmail.com รหัส 123456 ครับอาจารย์ เพื่อเช็ค insert, delete, select, update
         </p>
         <div>
           <v-btn
@@ -14,7 +14,7 @@
             color="primary"
             class="mr-4"
             elevation="2"
-            @click="showRegister = true"
+            @click="handleGetStarted"
           >
             Get Started
           </v-btn>
@@ -68,62 +68,47 @@
         </v-card>
       </v-col>
     </v-row>
-
+    
     <v-row class="mt-16">
-      <v-col cols="12" class="text-center mb-8">
+      <v-col cols="12" class="text-center">
         <h2 class="text-h3 font-weight-bold">Registered Users</h2>
-      </v-col>
-      <v-col v-if="users.length === 0" cols="12" class="text-center text-h6 text-grey">
-        ไม่มีผู้ใช้ในระบบ
-      </v-col>
-      <v-col cols="12">
-        <v-card elevation="2" class="pa-4">
-          <v-list dense>
-            <v-list-item v-for="user in users" :key="user.id">
-              <v-list-item-content>
-                <v-list-item-title>
-                  {{ user.username }} ({{ user.email }})
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  เพศ: {{ user.gender }} | ความสนใจ: {{ user.interest }}
-                </v-list-item-subtitle>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-        </v-card>
+        <p class="text-h4 mt-4 font-weight-light primary--text">
+          {{ userCount }} people
+        </p>
       </v-col>
     </v-row>
-
-    <register-form v-model="showRegister" />
   </div>
 </template>
 
 <script>
-import axios from 'axios'
-import RegisterForm from '~/components/RegisterForm.vue'
-
 export default {
   name: 'IndexPage',
-  components: { RegisterForm },
   data() {
     return {
-      showRegister: false,
-      users: []
+      userCount: 0
     }
   },
   async mounted() {
     try {
-      const res = await axios.get('http://localhost/krisbamrungtham/Db/get_users.php')
+      const res = await this.$axios.get('/get_users.php')
       const data = res.data
-
-      // ตรวจสอบโครงสร้างข้อมูลจาก API (สมมติส่ง {status, data})
-      if (data.status === 'success' && data.data) {
-        this.users = data.data
+      if (data.status === 'success') {
+        this.userCount = data.count
       } else {
-        console.error('Failed to fetch users:', data.message || 'Unknown error')
+        console.error('Failed to fetch user count:', data.message || 'Unknown error')
       }
     } catch (err) {
       console.error('Failed to connect to the server:', err)
+    }
+  },
+  methods: {
+    handleGetStarted() {
+      const isLoggedIn = !!localStorage.getItem('edukris_name');
+      if (isLoggedIn) {
+        this.$router.push('/index-login');
+      } else {
+        this.$root.$emit('show-register-dialog');
+      }
     }
   }
 }
