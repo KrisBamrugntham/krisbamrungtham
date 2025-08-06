@@ -50,6 +50,8 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
+    // baseURL ถูกเพิ่มตรงนี้แล้วครับ
+    baseURL: 'http://localhost/krisbamrungtham/Db/'
   },
   /*
   ** Server-side configuration for CORS

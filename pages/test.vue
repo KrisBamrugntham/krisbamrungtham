@@ -50,10 +50,9 @@ export default {
       this.error = null;
 
       try {
-        const res = await fetch('http://localhost/Db/select.php');
-        if (!res.ok) throw new Error('โหลดข้อมูลล้มเหลว');
-        const data = await res.json();
-        this.users = data;
+        // ใช้ this.$axios.get และเรียกใช้ path แค่ '/select.php'
+        const res = await this.$axios.get('/select.php');
+        this.users = res.data;
       } catch (err) {
         this.error = err.message;
       } finally {

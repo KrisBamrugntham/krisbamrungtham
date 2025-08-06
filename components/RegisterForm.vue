@@ -138,7 +138,6 @@ export default {
       this.success = false;
       this.error = null;
       if (this.$refs.form.validate()) {
-        // Prepare payload
         const payload = {
           username: this.form.name,
           email: this.form.email,
@@ -148,12 +147,10 @@ export default {
           avatar_url: 'ssdfefsef'
         };
         try {
-          const res = await fetch('http://localhost/krisbamrungtham/Db/insert.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json();
+          // ใช้ this.$axios.post และเรียกใช้ path แค่ '/insert.php'
+          const res = await this.$axios.post('/insert.php', payload);
+          const data = res.data;
+          
           if (data.success) {
             this.success = true;
             localStorage.setItem('edukris_name', this.form.name)
