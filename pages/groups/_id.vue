@@ -14,7 +14,6 @@
           </v-toolbar-title>
         </v-toolbar>
         <v-divider></v-divider>
-
         <v-list dense class="pa-0">
           <div v-if="joinRequests.length === 0" class="text-center grey--text pa-4 text--darken-1">
             ไม่มีคำขอเข้าร่วม
@@ -100,7 +99,6 @@
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
-
     </div>
 
     <div v-else class="d-flex fill-height align-center justify-center">
@@ -135,18 +133,13 @@ export default {
   name: 'GroupPage',
   data() {
     return {
-      // สถานะทั่วไป
       loading: true,
       requesting: false,
       membershipStatus: null,
-      currentUserRole: null, // 'admin' or 'member'
-      
-      // ข้อมูลผู้ใช้และกลุ่ม
+      currentUserRole: null,
       currentUserId: null,
       groupId: this.$route.params.id,
       group: {},
-      
-      // สถานะของแชทและส่วนจัดการ
       messages: [],
       newMessage: '',
       joinRequests: [],
@@ -200,9 +193,45 @@ export default {
       this.fetchJoinRequests();
       this.fetchGroupMembers();
     },
-    async fetchMessages() { /* ... โค้ดเหมือนเดิม ... */ },
-    async sendMessage() { /* ... โค้ดเหมือนเดิม ... */ },
-    scrollToBottom() { /* ... โค้ดเหมือนเดิม ... */ },
+    async fetchMessages() {
+      try {
+        const res = await this.$axios.get(`/get_group_messages.php?group_id=${this.groupId}`);
+        if (res.data.status === 'success' && JSON.stringify(this.messages) !== JSON.stringify(res.data.data)) {
+          this.messages = res.data.data;
+          this.scrollToBottom();
+        }
+      } catch (error) {
+        console.error("Failed to fetch group messages", error);
+      }
+    },
+    async sendMessage() {
+      if (!this.newMessage.trim()) return;
+      const tempMessage = this.newMessage;
+      this.newMessage = '';
+      try {
+        const res = await this.$axios.post('/send_group_message.php', {
+          group_id: this.groupId,
+          sender_id: this.currentUserId,
+          message: tempMessage
+        });
+        if (res.data.success) {
+          await this.fetchMessages();
+        } else {
+          this.newMessage = tempMessage;
+          alert('Error: ' + res.data.error);
+        }
+      } catch (error) {
+        console.error("Failed to send message:", error);
+        this.newMessage = tempMessage;
+        alert('ไม่สามารถส่งข้อความได้');
+      }
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const container = this.$refs.messageContainer;
+        if (container) container.scrollTop = container.scrollHeight;
+      });
+    },
     async fetchJoinRequests() {
       try {
         const res = await this.$axios.get(`/get_join_requests.php?group_id=${this.groupId}`);
@@ -232,7 +261,20 @@ export default {
         } catch (e) { alert('Failed to remove member.'); }
       }
     },
-    async sendJoinRequest() { /* ... โค้ดเหมือนเดิม ... */ },
+    async sendJoinRequest() {
+      this.requesting = true;
+      try {
+        await this.$axios.post('/send_join_request.php', {
+          group_id: this.groupId,
+          user_id: this.currentUserId
+        });
+        this.membershipStatus = 'pending';
+      } catch (error) {
+        alert('ไม่สามารถส่งคำขอได้');
+      } finally {
+        this.requesting = false;
+      }
+    },
   }
 }
 </script>
@@ -247,7 +289,6 @@ export default {
   max-width: 100%;
   word-wrap: break-word;
 }
-/* ทำให้ v-navigation-drawer ไม่มีเส้นขอบขวา/ซ้าย ที่ซ้อนกัน */
 .v-navigation-drawer--permanent:not(.v-navigation-drawer--right) {
   border-right: 1px solid rgba(0, 0, 0, 0.12) !important;
 }
