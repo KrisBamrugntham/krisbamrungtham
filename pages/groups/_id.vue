@@ -68,15 +68,20 @@ export default {
             const tempMessage = this.newMessage;
             this.newMessage = '';
             try {
-                await this.$axios.post('/send_group_message.php', {
+                const res = await this.$axios.post('/send_group_message.php', {
                     group_id: this.groupId,
                     sender_id: this.currentUserId,
                     message: tempMessage
                 });
-                await this.fetchMessages();
+                if (res.data.success) {
+                    await this.fetchMessages(); // ดึงข้อความใหม่ทันที
+                } else {
+                    alert('Error: ' + res.data.error);
+                    this.newMessage = tempMessage; // คืนค่าที่พิมพ์ไว้ถ้าส่งไม่สำเร็จ
+                }
             } catch (error) {
                 console.error("Failed to send group message", error);
-                this.newMessage = tempMessage; // Restore on failure
+                this.newMessage = tempMessage;
             }
         },
         scrollToBottom() {
@@ -91,7 +96,7 @@ export default {
 
 <style scoped>
 .fill-height {
-    height: calc(100vh - 88px); /* Adjust based on your header/footer height */
+    height: calc(100vh - 88px);
 }
 .message-bubble {
   padding: 8px 12px;
