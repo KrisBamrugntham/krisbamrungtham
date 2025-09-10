@@ -1,6 +1,19 @@
 <?php
+// เปิดการแสดงข้อผิดพลาด
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// ตั้งค่า Headers (สำคัญ: ต้องอยู่บนสุด)
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 include('connectdb.php');
 
 if (!isset($_GET['group_id'])) {
@@ -14,6 +27,7 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // 💡 จุดแก้ไขสำคัญ: ใช้ m.room_id และ u.user_id 
     $sql = "
         SELECT m.message_id, m.message, m.sent_at, u.user_id, u.username, u.avatar_url
         FROM chat_messages m
