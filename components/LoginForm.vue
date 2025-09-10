@@ -1,53 +1,54 @@
 <template>
   <v-dialog v-model="dialog" max-width="500">
-    <v-card elevation="3" class="pa-6">
-      <v-card-title class="headline font-weight-bold mb-2">ลงชื่อเข้าใช้ Edukris</v-card-title>
+    <v-card class="pa-4 pa-md-8">
+      <div class="text-center">
+        <h2 class="text-h5 font-weight-bold">ยินดีต้อนรับกลับมา!</h2>
+        <p class="grey--text text--darken-1">ลงชื่อเข้าใช้เพื่อดำเนินการต่อ</p>
+      </div>
       <v-form ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <v-text-field
           v-model="form.email"
           :rules="emailRules"
           label="อีเมล"
+          prepend-inner-icon="mdi-email-outline"
+          outlined
           required
           autocomplete="email"
+          class="mb-2"
         />
         <v-text-field
           v-model="form.password"
-          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="showPassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
           :type="showPassword ? 'text' : 'password'"
           @click:append="showPassword = !showPassword"
           :rules="[v => !!v || 'กรุณากรอกรหัสผ่าน']"
           label="รหัสผ่าน"
+          prepend-inner-icon="mdi-lock-outline"
+          outlined
           required
           autocomplete="current-password"
         />
+        
+        <v-alert v-if="error" type="error" dense text class="mt-2 mb-4">{{ error }}</v-alert>
+
         <v-btn
           color="primary"
-          class="mt-4"
+          class="mt-2"
           large
           block
           type="submit"
-          :disabled="!valid"
+          :loading="loading"
+          :disabled="!valid || loading"
         >
-          Sign In
+          เข้าสู่ระบบ
         </v-btn>
 
         <div class="text-center mt-6">
-          <span>ยังไม่มีบัญชี? </span>
-          <a href="#" @click.prevent="$emit('switch-to-register')">
-            Sign Up
+          <span>ยังไม่มีบัญชีใช่ไหม? </span>
+          <a href="#" class="font-weight-bold" @click.prevent="$emit('switch-to-register')">
+            สมัครสมาชิกที่นี่
           </a>
         </div>
-
-        <v-alert
-          v-if="error"
-          type="error"
-          class="mt-4"
-          border="left"
-          colored-border
-          elevation="2"
-        >
-          {{ error }}
-        </v-alert>
       </v-form>
     </v-card>
   </v-dialog>
@@ -66,6 +67,7 @@ export default {
     return {
       dialog: this.value,
       valid: false,
+      loading: false,
       error: null,
       showPassword: false,
       form: {
@@ -93,6 +95,7 @@ export default {
     async submit() {
       this.error = null;
       if (this.$refs.form.validate()) {
+        this.loading = true;
         try {
           const res = await this.$axios.post('/login.php', this.form);
           const data = res.data;
@@ -100,18 +103,15 @@ export default {
           if (data.success && data.user) {
             const user = data.user;
             
-            // --- 💡 จุดแก้ไข ---
-            // เพิ่มการบันทึก avatar_url
             localStorage.setItem('edukris_id', user.user_id);
             localStorage.setItem('edukris_name', user.username);
             localStorage.setItem('edukris_email', user.email);
             localStorage.setItem('edukris_gender', user.gender);
             localStorage.setItem('edukris_interests', user.interest);
-            localStorage.setItem('edukris_avatar', user.avatar_url); // เพิ่มบรรทัดนี้
+            localStorage.setItem('edukris_avatar', user.avatar_url);
             if (user.role) {
               localStorage.setItem('edukris_role', user.role);
             }
-            // --- จบจุดแก้ไข ---
             
             window.dispatchEvent(new Event('storage'));
             this.dialog = false;
@@ -128,6 +128,8 @@ export default {
         } catch (err) {
           this.error = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
           console.error(err);
+        } finally {
+            this.loading = false;
         }
       }
     },
@@ -137,7 +139,14 @@ export default {
       }
       this.form = { email: '', password: '' };
       this.error = null;
+      this.loading = false;
     }
   }
 }
 </script>
+
+<style scoped>
+.v-card {
+    border-radius: 16px;
+}
+</style>

@@ -1,45 +1,65 @@
 <template>
-  <v-dialog v-model="dialog" max-width="600px">
-    <v-card>
-      <v-card-title>
-        <span class="text-h5">Edit User: {{ form.username }}</span>
+  <v-dialog v-model="dialog" max-width="700px">
+    <v-card rounded="lg" class="pa-4">
+      <v-card-title class="justify-center">
+        <span class="text-h5 font-weight-bold">แก้ไขข้อมูลผู้ใช้</span>
       </v-card-title>
-      <v-card-text>
-        <v-container>
-          <v-form ref="form" v-model="valid">
-            <v-text-field v-model="form.username" label="Username*" :rules="[v => !!v || 'Username is required']" required />
-            <v-text-field v-model="form.email" label="Email*" :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'E-mail must be valid']" required />
-            <v-radio-group v-model="form.gender" label="Gender" row>
-              <v-radio label="ชาย" value="ชาย" />
-              <v-radio label="หญิง" value="หญิง" />
-              <v-radio label="อื่น ๆ" value="อื่น ๆ" />
-            </v-radio-group>
-            <v-text-field v-model="form.interest" label="Interests (comma separated)" />
-            <v-select v-model="form.role" :items="['admin', 'member']" label="Role" required />
+      <v-card-subtitle class="text-center mt-1">@{{ form.username }}</v-card-subtitle>
 
-            <v-select
-              v-model="form.status"
-              :items="['active', 'suspended']"
-              label="Status"
-              required
-            ></v-select>
-            
-            <v-text-field
-              v-if="form.status === 'suspended'"
-              v-model="form.suspended_until"
-              label="Suspended Until (YYYY-MM-DD)"
-              placeholder="เช่น 2025-12-31"
-              :rules="[v => !!v || 'กรุณาระบุวันที่สิ้นสุดการระงับ']"
-              required
-            ></v-text-field>
-            </v-form>
-        </v-container>
-        <small>*indicates required field</small>
+      <v-card-text class="mt-4">
+        <v-form ref="form" v-model="valid">
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.username" label="ชื่อผู้ใช้*" :rules="[v => !!v || 'Username is required']" required outlined prepend-inner-icon="mdi-account-outline"></v-text-field>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.email" label="อีเมล*" :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'E-mail must be valid']" required outlined prepend-inner-icon="mdi-email-outline"></v-text-field>
+            </v-col>
+            <v-col cols="12">
+                <v-text-field v-model="form.interest" label="ความสนใจ (คั่นด้วยลูกน้ำ)" outlined prepend-inner-icon="mdi-heart-outline"></v-text-field>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select v-model="form.role" :items="['admin', 'member']" label="บทบาท" outlined prepend-inner-icon="mdi-shield-account-outline"></v-select>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select v-model="form.status" :items="['active', 'suspended']" label="สถานะ" outlined prepend-inner-icon="mdi-list-status"></v-select>
+            </v-col>
+            <v-col v-if="form.status === 'suspended'" cols="12">
+              <v-menu
+                ref="dateMenu"
+                v-model="dateMenu"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+                min-width="auto"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="form.suspended_until"
+                    label="ระงับการใช้งานจนถึงวันที่"
+                    prepend-inner-icon="mdi-calendar-clock"
+                    readonly
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                    :rules="[v => !!v || 'กรุณาระบุวันที่สิ้นสุดการระงับ']"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="form.suspended_until"
+                  no-title
+                  @input="dateMenu = false"
+                ></v-date-picker>
+              </v-menu>
+            </v-col>
+          </v-row>
+        </v-form>
       </v-card-text>
-      <v-card-actions>
+
+      <v-card-actions class="pa-4">
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-        <v-btn color="blue darken-1" :disabled="!valid" @click="save">Save</v-btn>
+        <v-btn text large @click="close">ยกเลิก</v-btn>
+        <v-btn color="primary" large depressed :disabled="!valid" :loading="loading" @click="save">บันทึก</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -58,6 +78,8 @@ export default {
   data() {
     return {
       valid: true,
+      loading: false,
+      dateMenu: false,
       form: {},
     };
   },
@@ -70,10 +92,9 @@ export default {
   watch: {
     user(newUser) {
       if (newUser) {
-        // แปลงค่า null ให้เป็น string ว่าง เพื่อให้ v-text-field ทำงานได้ถูกต้อง
         this.form = { 
           ...newUser,
-          suspended_until: newUser.suspended_until || ''
+          suspended_until: newUser.suspended_until ? newUser.suspended_until.split(' ')[0] : '' // Format for date picker
         };
       } else {
         this.form = {};
@@ -86,8 +107,15 @@ export default {
     },
     async save() {
       if (this.$refs.form.validate()) {
+        this.loading = true;
         try {
-          const res = await this.$axios.post('/update_user.php', this.form);
+          // If status is not suspended, clear the suspended_until date
+          const payload = { ...this.form };
+          if (payload.status !== 'suspended') {
+              payload.suspended_until = null;
+          }
+
+          const res = await this.$axios.post('/update_user.php', payload);
           if (res.data.success) {
             this.$emit('user-updated');
             this.close();
@@ -97,6 +125,8 @@ export default {
         } catch (error) {
           console.error('Failed to update user', error);
           alert('Failed to connect to server.');
+        } finally {
+            this.loading = false;
         }
       }
     },

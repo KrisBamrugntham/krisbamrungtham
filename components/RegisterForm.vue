@@ -1,90 +1,87 @@
 <template>
-  <v-dialog v-model="dialog" max-width="500" >
-    <v-card elevation="3" class="pa-6">
-      <v-card-title class="headline font-weight-bold mb-2">สมัครสมาชิก Edukris</v-card-title>
+  <v-dialog v-model="dialog" max-width="500">
+    <v-card class="pa-4 pa-md-8">
+      <div class="text-center">
+        <h2 class="text-h5 font-weight-bold">สร้างบัญชีผู้ใช้ใหม่</h2>
+        <p class="grey--text text--darken-1">เข้าร่วมชุมชนของเราวันนี้!</p>
+      </div>
       <v-form ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <v-text-field
           v-model="form.name"
           :rules="[v => !!v || 'กรุณากรอกชื่อ']"
-          label="ชื่อ"
+          label="ชื่อผู้ใช้"
+          prepend-inner-icon="mdi-account-outline"
+          outlined
           required
+          class="mb-2"
         />
         <v-text-field
           v-model="form.email"
           :rules="emailRules"
           label="อีเมล"
+          prepend-inner-icon="mdi-email-outline"
+          outlined
           required
+          class="mb-2"
         />
         <v-text-field
           v-model="form.password"
-          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="showPassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
           :type="showPassword ? 'text' : 'password'"
           @click:append="showPassword = !showPassword"
           :rules="[v => !!v || 'กรุณากรอกรหัสผ่าน', v => v.length >= 6 || 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร']"
           label="รหัสผ่าน"
+          prepend-inner-icon="mdi-lock-outline"
+          outlined
           required
+          class="mb-2"
         />
         <v-text-field
           v-model="form.confirmPassword"
-          :append-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="showConfirmPassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
           :type="showConfirmPassword ? 'text' : 'password'"
           @click:append="showConfirmPassword = !showConfirmPassword"
           :rules="[v => !!v || 'กรุณายืนยันรหัสผ่าน', v => v === form.password || 'รหัสผ่านไม่ตรงกัน']"
           label="ยืนยันรหัสผ่าน"
+          prepend-inner-icon="mdi-lock-check-outline"
+          outlined
           required
+          class="mb-2"
         />
-        <v-radio-group v-model="form.gender" :rules="[v => !!v || 'กรุณาเลือกเพศ']" label="เพศ" row>
-          <v-radio label="ชาย" value="ชาย" />
-          <v-radio label="หญิง" value="หญิง" />
-          <v-radio label="อื่น ๆ" value="อื่น ๆ" />
-        </v-radio-group>
         <v-select
           v-model="form.interests"
           :items="interestOptions"
           label="ความสนใจ"
+          prepend-inner-icon="mdi-heart-outline"
           multiple
           chips
+          outlined
           :rules="[v => v.length > 0 || 'กรุณาเลือกความสนใจอย่างน้อย 1 รายการ']"
           required
+          class="mb-2"
         />
-        <v-btn
-          color="primary"
-          class="mt-4"
-          large
-          block
-          type="submit"
-          :disabled="!valid"
-        >
+        <div>
+            <p class="grey--text text--darken-1 mb-2">เพศ</p>
+            <v-radio-group v-model="form.gender" :rules="[v => !!v || 'กรุณาเลือกเพศ']" row class="mt-0">
+                <v-radio label="ชาย" value="ชาย" />
+                <v-radio label="หญิง" value="หญิง" />
+                <v-radio label="อื่น ๆ" value="อื่น ๆ" />
+            </v-radio-group>
+        </div>
+        
+        <v-alert v-if="error" type="error" dense text class="mb-4">{{ error }}</v-alert>
+        <v-alert v-if="success" type="success" dense text class="mb-4">ลงทะเบียนสำเร็จ! กำลังนำคุณเข้าสู่ระบบ...</v-alert>
+
+        <v-btn color="primary" class="mt-2" large block type="submit" :loading="loading" :disabled="!valid || loading">
           ลงทะเบียน
         </v-btn>
 
         <div class="text-center mt-6">
-          <span>มีบัญชีแล้ว? </span>
-          <a href="#" @click.prevent="$emit('switch-to-login')">
-            Sign in
+          <span>มีบัญชีอยู่แล้ว? </span>
+          <a href="#" class="font-weight-bold" @click.prevent="$emit('switch-to-login')">
+            เข้าสู่ระบบที่นี่
           </a>
         </div>
-
-        <v-alert
-          v-if="error"
-          type="error"
-          class="mt-4"
-          border="left"
-          colored-border
-          elevation="2"
-        >
-          {{ error }}
-        </v-alert>
-        <v-alert
-          v-if="success"
-          type="success"
-          class="mt-4"
-          border="left"
-          colored-border
-          elevation="2"
-        >
-          ลงทะเบียนสำเร็จ
-        </v-alert>
       </v-form>
     </v-card>
   </v-dialog>
@@ -103,6 +100,7 @@ export default {
     return {
       dialog: this.value,
       valid: false,
+      loading: false,
       success: false,
       error: null,
       showPassword: false,
@@ -147,6 +145,7 @@ export default {
       this.success = false;
       this.error = null;
       if (this.$refs.form.validate()) {
+        this.loading = true;
         const payload = {
           username: this.form.name,
           email: this.form.email,
@@ -161,27 +160,29 @@ export default {
           
           if (data.success) {
             this.success = true;
-            localStorage.setItem('edukris_name', this.form.name)
-            localStorage.setItem('edukris_email', this.form.email)
-            localStorage.setItem('edukris_gender', this.form.gender)
-            localStorage.setItem('edukris_interests', this.form.interests.join(','))
+            // The login logic will be handled by the login form after this.
+            // For now, just show success and redirect.
+            localStorage.setItem('edukris_id', data.user_id);
+            localStorage.setItem('edukris_name', this.form.name);
+            localStorage.setItem('edukris_email', this.form.email);
+            localStorage.setItem('edukris_gender', this.form.gender);
+            localStorage.setItem('edukris_interests', this.form.interests.join(','));
+            localStorage.setItem('edukris_avatar', data.avatar_url);
             
             window.dispatchEvent(new Event('storage'));
 
             setTimeout(() => {
-              this.dialog = false
-              this.$router.push('/index-login')
-            }, 1200)
+              this.dialog = false;
+              this.$router.push('/index-login');
+            }, 1500);
           } else {
             this.error = data.error || 'เกิดข้อผิดพลาดในการลงทะเบียน';
-            if(data.details) {
-              console.error("Server Error Details:", data.details);
-              this.error += ` (Details: ${data.details})`;
-            }
           }
         } catch (err) {
             this.error = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
             console.error(err);
+        } finally {
+            this.loading = false;
         }
       }
     },
@@ -191,6 +192,7 @@ export default {
       }
       this.valid = false;
       this.success = false;
+      this.loading = false;
       this.form = {
         name: '',
         email: '',
@@ -204,3 +206,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.v-card {
+    border-radius: 16px;
+}
+</style>
