@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// ตั้งค่า Headers
+// ตั้งค่า Headers (สำคัญ: ต้องอยู่บนสุด)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -27,6 +27,7 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // 💡 จุดแก้ไขสำคัญ: ใช้ m.room_id และ u.user_id 
     $sql = "
         SELECT m.message_id, m.message, m.sent_at, u.user_id, u.username, u.avatar_url
         FROM chat_messages m
