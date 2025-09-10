@@ -101,11 +101,13 @@ export default {
             const user = data.user;
             
             // --- 💡 จุดแก้ไข ---
-            // บันทึกข้อมูลทั้งหมดที่ได้จาก API รวมถึง role
+            // เพิ่มการบันทึก avatar_url
+            localStorage.setItem('edukris_id', user.user_id);
             localStorage.setItem('edukris_name', user.username);
             localStorage.setItem('edukris_email', user.email);
             localStorage.setItem('edukris_gender', user.gender);
             localStorage.setItem('edukris_interests', user.interest);
+            localStorage.setItem('edukris_avatar', user.avatar_url); // เพิ่มบรรทัดนี้
             if (user.role) {
               localStorage.setItem('edukris_role', user.role);
             }
