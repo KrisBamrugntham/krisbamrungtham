@@ -1,119 +1,135 @@
 <template>
-  <div>
-    <v-row no-gutters class="fill-height" style="min-height: calc(100vh - 64px);">
-      <v-col cols="12" md="3" class="pa-0 grey lighten-4" style="min-width:260px;max-width:320px;">
-        <v-list dense class="pt-10">
-          <v-list-item>
-            <v-list-item-avatar size="56">
+  <div class="feed-background">
+    <v-container fluid>
+      <v-row class="fill-height">
+        <!-- Left Column -->
+        <v-col cols="12" md="3" class="pa-4">
+          <v-card class="profile-card pa-4 text-center" elevation="1">
+            <v-avatar size="90" class="mb-4 elevation-2">
               <v-img :src="userAvatar" />
-            </v-list-item-avatar>
-            <v-list-item-content>
-              <v-list-item-title class="font-weight-bold" style="font-size:1.1rem;">{{ userName }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-        <v-card class="mx-4 my-4 pa-4" outlined>
-          <div class="mb-2"><strong>ชื่อผู้ใช้:</strong> {{ userName }}</div>
-          <div class="mb-2"><strong>อีเมล:</strong> {{ userEmail }}</div>
-          <div class="mb-2"><strong>เพศ:</strong> {{ userGender }}</div>
-          <div><strong>ความสนใจ:</strong> {{ userInterests }}</div>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn small color="primary" @click="editProfile">แก้ไขข้อมูล</v-btn>
-          </v-card-actions>
-        </v-card>
+            </v-avatar>
+            <h2 class="text-h6 font-weight-bold">{{ userName }}</h2>
+            <p class="body-2 grey--text text--darken-1 mb-4">{{ userEmail }}</p>
+            <v-divider class="my-2"></v-divider>
+            <div class="text-left body-2 my-4">
+              <p><v-icon small left>mdi-gender-male-female</v-icon><strong>เพศ:</strong> {{ userGender }}</p>
+              <p class="mb-0"><v-icon small left>mdi-heart-outline</v-icon><strong>ความสนใจ:</strong> {{ userInterests }}</p>
+            </div>
+            <v-btn block color="primary" outlined @click="editProfile">
+              <v-icon left>mdi-pencil-outline</v-icon> แก้ไขข้อมูล
+            </v-btn>
+          </v-card>
 
-        <v-card class="mx-4 my-4" outlined>
-            <v-tabs v-model="friendTab" grow>
-                <v-tab>แนะนำ</v-tab>
-                <v-tab>คำขอ ({{ friendRequests.length }})</v-tab>
+          <v-card class="mt-4" elevation="1">
+            <v-tabs v-model="friendTab" background-color="transparent" grow>
+              <v-tab>แนะนำ</v-tab>
+              <v-tab>
+                คำขอ
+                <v-badge v-if="friendRequests.length > 0" color="pink" :content="friendRequests.length" inline></v-badge>
+              </v-tab>
             </v-tabs>
-            <v-tabs-items v-model="friendTab">
-                <v-tab-item>
-                    <v-list dense>
-                        <v-list-item v-for="user in friendSuggestions" :key="user.user_id">
-                            <v-list-item-avatar size="36">
-                                <v-img :src="user.avatar_url"></v-img>
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title>{{ user.username }}</v-list-item-title>
-                            </v-list-item-content>
-                            <v-list-item-action>
-                                <v-btn icon small color="green" @click="handleFriendAction(user.user_id, 'add')"><v-icon>mdi-account-plus</v-icon></v-btn>
-                            </v-list-item-action>
-                        </v-list-item>
-                        <v-list-item v-if="friendSuggestions.length === 0">
-                            <v-list-item-content class="text-center grey--text">ไม่มีเพื่อนแนะนำในขณะนี้</v-list-item-content>
-                        </v-list-item>
-                    </v-list>
-                </v-tab-item>
-                <v-tab-item>
-                    <v-list dense>
-                         <v-list-item v-for="user in friendRequests" :key="user.user_id">
-                            <v-list-item-avatar size="36">
-                                <v-img :src="user.avatar_url"></v-img>
-                            </v-list-item-avatar>
-                            <v-list-item-content>
-                                <v-list-item-title>{{ user.username }}</v-list-item-title>
-                            </v-list-item-content>
-                            <v-list-item-action>
-                                <v-btn icon small color="green" @click="handleFriendAction(user.user_id, 'accept')"><v-icon>mdi-check</v-icon></v-btn>
-                                <v-btn icon small color="red" @click="handleFriendAction(user.user_id, 'reject')"><v-icon>mdi-close</v-icon></v-btn>
-                            </v-list-item-action>
-                        </v-list-item>
-                        <v-list-item v-if="friendRequests.length === 0">
-                            <v-list-item-content class="text-center grey--text">ไม่มีคำขอเป็นเพื่อน</v-list-item-content>
-                        </v-list-item>
-                    </v-list>
-                </v-tab-item>
+            <v-tabs-items v-model="friendTab" class="pa-2">
+              <v-tab-item>
+                <v-list dense v-if="friendSuggestions.length > 0">
+                  <v-list-item v-for="user in friendSuggestions" :key="user.user_id">
+                    <v-list-item-avatar size="36">
+                      <v-img :src="user.avatar_url"></v-img>
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-medium">{{ user.username }}</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-btn icon small color="green lighten-1" @click="handleFriendAction(user.user_id, 'add')"><v-icon small>mdi-account-plus-outline</v-icon></v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+                 <div v-else class="text-center grey--text pa-4">ไม่มีเพื่อนแนะนำ</div>
+              </v-tab-item>
+              <v-tab-item>
+                <v-list dense v-if="friendRequests.length > 0">
+                  <v-list-item v-for="user in friendRequests" :key="user.user_id">
+                    <v-list-item-avatar size="36">
+                      <v-img :src="user.avatar_url"></v-img>
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-medium">{{ user.username }}</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action class="d-flex flex-row">
+                      <v-btn icon small color="green lighten-1" @click="handleFriendAction(user.user_id, 'accept')"><v-icon small>mdi-check</v-icon></v-btn>
+                      <v-btn icon small color="red lighten-1" @click="handleFriendAction(user.user_id, 'reject')"><v-icon small>mdi-close</v-icon></v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+                <div v-else class="text-center grey--text pa-4">ไม่มีคำขอเป็นเพื่อน</div>
+              </v-tab-item>
             </v-tabs-items>
-        </v-card>
-      </v-col>
-      
-      <v-col cols="12" md="6" class="pa-6">
-        <h2 class="text-h4 font-weight-bold mb-6">Edukris Feed</h2>
-        <v-card class="mb-6" elevation="2">
-            <v-card-text>
-                <v-textarea v-model="newPostContent" label="คุณกำลังคิดอะไรอยู่..." rows="3" auto-grow hide-details></v-textarea>
-                <v-img v-if="newPostImageUrl" :src="newPostImageUrl" class="my-3" contain max-height="200"></v-img>
-                <v-file-input v-model="newPostImageFile" label="เพิ่มรูปภาพ (ไม่จำเป็น)" accept="image/*" prepend-icon="mdi-camera" show-size dense class="mt-3" @change="onNewPostImageSelected"></v-file-input>
-                <v-btn v-if="newPostImageUrl" small text color="error" @click="removeNewPostImage"><v-icon left>mdi-close-circle</v-icon> ลบรูปภาพ</v-btn>
+          </v-card>
+        </v-col>
+
+        <!-- Middle Column -->
+        <v-col cols="12" md="6" class="pa-4">
+          <v-card class="create-post-card mb-6" elevation="1">
+            <v-card-text class="pa-4">
+              <div class="d-flex align-start">
+                <v-avatar size="40" class="mr-4">
+                  <v-img :src="userAvatar" />
+                </v-avatar>
+                <v-textarea v-model="newPostContent" placeholder="คุณกำลังคิดอะไรอยู่..." rows="2" auto-grow hide-details solo flat background-color="grey lighten-4"></v-textarea>
+              </div>
+              <div v-if="newPostImageUrl" class="mt-4 text-center">
+                  <v-img :src="newPostImageUrl" class="rounded-lg" contain max-height="250"></v-img>
+              </div>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="pa-4 pt-0">
+                <v-btn text @click="$refs.fileInput.click()">
+                    <v-icon left color="green">mdi-image-area</v-icon> รูปภาพ
+                </v-btn>
+                <v-file-input ref="fileInput" v-model="newPostImageFile" accept="image/*" hide-input @change="onNewPostImageSelected"></v-file-input>
+                <v-btn v-if="newPostImageUrl" text small color="red" @click="removeNewPostImage">
+                    <v-icon left>mdi-close-circle-outline</v-icon> ลบรูป
+                </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" :disabled="!newPostContent && !newPostImageFile" :loading="isCreatingPost" @click="createPost">โพสต์</v-btn>
+                <v-btn color="primary" elevation="0" :disabled="!newPostContent.trim() && !newPostImageFile" :loading="isCreatingPost" @click="createPost">โพสต์</v-btn>
             </v-card-actions>
-        </v-card>
+          </v-card>
 
-        <div v-if="loadingPosts" class="text-center">
-            <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        </div>
-        <div v-else>
-            <post-card v-for="post in posts" :key="post.post_id" :post="post" @post-updated="fetchPosts" @comment-added="fetchPosts" @comment-deleted="fetchPosts" />
-            <div v-if="posts.length === 0" class="text-center grey--text mt-10">ยังไม่มีโพสต์...</div>
-        </div>
-      </v-col>
-
-      <v-col cols="12" md="3" class="pa-0 grey lighten-4" style="min-width:220px;max-width:320px;">
-        <div class="pt-10 px-4">
-          <h3 class="text-h6 font-weight-bold mb-2">เพื่อนออนไลน์ ({{ friends.length }})</h3>
-          <v-list dense v-if="friends.length > 0">
-            <v-list-item v-for="friend in friends" :key="friend.user_id">
-              <v-list-item-avatar size="36">
-                <v-img :src="friend.avatar_url || 'https://randomuser.me/api/portraits/lego/2.jpg'" />
-              </v-list-item-avatar>
-              <v-list-item-content>
-                <v-list-item-title>{{ friend.username }}</v-list-item-title>
-              </v-list-item-content>
-              <v-icon color="success" small>mdi-circle</v-icon>
-            </v-list-item>
-          </v-list>
-          <div v-else class="pa-4 text-center grey--text">
-            ไม่มีเพื่อนที่ออนไลน์
+          <div v-if="loadingPosts" class="text-center py-16">
+            <v-progress-circular size="64" indeterminate color="primary"></v-progress-circular>
           </div>
-        </div>
-      </v-col>
-    </v-row>
+          <div v-else>
+            <post-card v-for="post in posts" :key="post.post_id" :post="post" @post-updated="fetchPosts" @comment-added="fetchPosts" @comment-deleted="fetchPosts" class="mb-4" elevation="1" />
+            <div v-if="posts.length === 0" class="text-center grey--text mt-16">
+                <v-icon large color="grey lighten-1">mdi-text-box-outline</v-icon>
+                <p class="mt-4">ยังไม่มีโพสต์ในฟีดของคุณ</p>
+            </div>
+          </div>
+        </v-col>
+
+        <!-- Right Column -->
+        <v-col cols="12" md="3" class="pa-4">
+          <v-card class="online-friends-card" elevation="1">
+            <v-card-title class="text-h6 font-weight-bold">เพื่อนออนไลน์ ({{ friends.length }})</v-card-title>
+            <v-divider></v-divider>
+            <v-list v-if="friends.length > 0">
+              <v-list-item v-for="friend in friends" :key="friend.user_id">
+                <v-list-item-avatar size="40">
+                  <v-img :src="friend.avatar_url || 'https://randomuser.me/api/portraits/lego/2.jpg'" />
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title class="font-weight-medium">{{ friend.username }}</v-list-item-title>
+                </v-list-item-content>
+                <v-list-item-icon>
+                    <v-icon color="green accent-4" small>mdi-circle</v-icon>
+                </v-list-item-icon>
+              </v-list-item>
+            </v-list>
+            <div v-else class="text-center grey--text pa-8">
+              ไม่มีเพื่อนออนไลน์
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
     <edit-profile-form v-model="editDialog" :user="currentUser" @profile-updated="onProfileUpdate" />
   </div>
 </template>
@@ -206,7 +222,6 @@ export default {
         }
     },
     async handleFriendAction(targetUserId, action) {
-        console.log(`Action: ${action}, From: ${this.currentUserId}, To: ${targetUserId}`);
         try {
             const res = await this.$axios.post('/friend_request.php', {
                 user_id_1: this.currentUserId,
@@ -214,14 +229,14 @@ export default {
                 action: action,
             });
             if (res.data.success) {
-                alert(res.data.message); // แจ้งเตือนเมื่อสำเร็จ
+                alert(res.data.message);
                 this.fetchAllFriendData();
             } else {
                  alert('เกิดข้อผิดพลาด: ' + res.data.error);
             }
         } catch (error) {
             console.error(`Error performing friend action (${action}):`, error);
-            alert(`การเชื่อมต่อล้มเหลว ไม่สามารถ${action}เพื่อนได้`);
+            alert(`การเชื่อมต่อล้มเหลว`);
         }
     },
     async fetchPosts() {
@@ -295,7 +310,25 @@ export default {
 </script>
 
 <style scoped>
+.feed-background {
+  background-color: #F0F2F5;
+  min-height: calc(100vh - 64px); /* Adjust based on app-bar height */
+}
+
+.profile-card, .create-post-card, .online-friends-card, .v-card {
+  border-radius: 12px;
+}
+
 .v-list-item-avatar img {
   object-fit: cover;
+  border-radius: 50%;
+}
+
+.create-post-card .v-textarea {
+    border-radius: 20px;
+}
+
+.v-tabs-items {
+    border-radius: 0 0 12px 12px;
 }
 </style>

@@ -1,73 +1,117 @@
 <template>
-  <v-row>
-    <v-col cols="3">
-      <v-sheet rounded="lg">
-        <v-list color="transparent">
-          <v-subheader>Admin Menu</v-subheader>
-          <v-list-item-group v-model="selectedItem" color="primary">
-            <v-list-item v-for="(item, i) in items" :key="i">
-              <v-list-item-icon>
-                <v-icon v-text="item.icon"></v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title v-text="item.text"></v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
-      </v-sheet>
-    </v-col>
+  <v-container fluid class="admin-dashboard-bg">
+    <!-- Header -->
+    <v-row>
+      <v-col cols="12">
+        <h1 class="text-h4 font-weight-bold">Admin Dashboard</h1>
+        <p class="grey--text text--darken-1">ภาพรวมและเครื่องมือจัดการระบบ</p>
+      </v-col>
+    </v-row>
 
-    <v-col cols="9">
-      <v-sheet min-height="70vh" rounded="lg">
-        <div v-if="selectedItem === 0">
-          <v-card-title>
-            User Management ({{ users.length }} users)
-            <v-spacer></v-spacer>
-            <v-btn small color="primary" @click="fetchUsers">
-              <v-icon left>mdi-refresh</v-icon> Refresh
-            </v-btn>
-          </v-card-title>
-          <v-data-table :headers="headers" :items="users" :items-per-page="10" class="elevation-1">
-            <template v-slot:item.status="{ item }">
-              <v-chip :color="getStatusColor(item.status)" dark small>
-                {{ item.status }}
-              </v-chip>
-            </template>
-            <template v-slot:item.actions="{ item }">
-              <v-icon small class="mr-2" @click="editUser(item)">
-                mdi-pencil
-              </v-icon>
-              <v-icon small @click="confirmDelete(item)">
-                mdi-delete
-              </v-icon>
-            </template>
-          </v-data-table>
-        </div>
-        <div v-else>
-           <v-card-title>{{ items[selectedItem].text }}</v-card-title>
-           <v-card-text>Coming soon...</v-card-text>
-        </div>
-      </v-sheet>
-    </v-col>
-    
+    <!-- Stat Cards -->
+    <v-row>
+      <v-col cols="12" md="4">
+        <v-card rounded="lg" class="pa-4 d-flex align-center">
+          <v-avatar color="blue lighten-4" size="60" class="mr-4">
+            <v-icon color="primary">mdi-account-group-outline</v-icon>
+          </v-avatar>
+          <div>
+            <p class="text-h4 font-weight-bold mb-0">{{ users.length }}</p>
+            <p class="grey--text text--darken-1 mb-0">ผู้ใช้ทั้งหมด</p>
+          </div>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-card rounded="lg" class="pa-4 d-flex align-center">
+          <v-avatar color="green lighten-4" size="60" class="mr-4">
+            <v-icon color="success">mdi-post-outline</v-icon>
+          </v-avatar>
+          <div>
+            <p class="text-h4 font-weight-bold mb-0">1,204</p>
+            <p class="grey--text text--darken-1 mb-0">โพสต์ทั้งหมด</p>
+          </div>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-card rounded="lg" class="pa-4 d-flex align-center">
+          <v-avatar color="orange lighten-4" size="60" class="mr-4">
+            <v-icon color="orange">mdi-google-circles-communities</v-icon>
+          </v-avatar>
+          <div>
+            <p class="text-h4 font-weight-bold mb-0">58</p>
+            <p class="grey--text text--darken-1 mb-0">กลุ่มทั้งหมด</p>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Main Content -->
+    <v-row class="mt-4">
+      <v-col cols="12" md="3">
+        <v-card rounded="lg">
+          <v-list color="transparent" class="pa-2">
+            <v-subheader class="font-weight-bold">Admin Menu</v-subheader>
+            <v-list-item-group v-model="selectedItem" color="primary">
+              <v-list-item v-for="(item, i) in items" :key="i" class="mb-1" rounded="lg">
+                <v-list-item-icon class="mr-3">
+                  <v-icon v-text="item.icon"></v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title v-text="item.text"></v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" md="9">
+        <v-card rounded="lg">
+          <div v-if="selectedItem === 0">
+            <v-card-title>
+              จัดการผู้ใช้งาน
+              <v-spacer></v-spacer>
+              <v-text-field v-model="search" append-icon="mdi-magnify" label="ค้นหาผู้ใช้..." single-line hide-details dense outlined></v-text-field>
+            </v-card-title>
+            <v-data-table :headers="headers" :items="users" :search="search" :items-per-page="10">
+              <template v-slot:item.status="{ item }">
+                <v-chip :color="getStatusColor(item.status)" dark small>{{ item.status }}</v-chip>
+              </template>
+              <template v-slot:item.actions="{ item }">
+                <v-btn icon small class="mr-2" @click="editUser(item)">
+                  <v-icon small>mdi-pencil-outline</v-icon>
+                </v-btn>
+                <v-btn icon small @click="confirmDelete(item)">
+                  <v-icon small>mdi-delete-outline</v-icon>
+                </v-btn>
+              </template>
+            </v-data-table>
+          </div>
+          <div v-else class="pa-8 text-center grey--text">
+            <v-icon size="60" class="mb-4">{{ items[selectedItem].icon }}</v-icon>
+            <h2>{{ items[selectedItem].text }}</h2>
+            <p>Coming soon...</p>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+
     <edit-user-form v-model="editDialog" :user="selectedUser" @user-updated="fetchUsers" />
-    
-    <v-dialog v-model="deleteDialog" max-width="500px">
-      <v-card>
-        <v-card-title class="text-h5">Are you sure you want to delete this user?</v-card-title>
-        <v-card-text>
-          You are about to permanently delete <strong>{{ userToDelete ? userToDelete.username : '' }}</strong>. This action cannot be undone.
+
+    <v-dialog v-model="deleteDialog" max-width="450">
+      <v-card rounded="lg" class="pa-4">
+        <v-card-title class="text-h5 justify-center">ยืนยันการลบผู้ใช้</v-card-title>
+        <v-card-text class="text-center mt-2">
+          คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ <strong class="red--text">{{ userToDelete ? userToDelete.username : '' }}</strong> ออกจากระบบอย่างถาวร?
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="mt-4">
+          <v-btn text large @click="closeDeleteDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="closeDeleteDialog">Cancel</v-btn>
-          <v-btn color="red darken-1" text @click="deleteUserConfirmed">OK</v-btn>
-          <v-spacer></v-spacer>
+          <v-btn color="red" dark large depressed @click="deleteUserConfirmed">ยืนยันการลบ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -78,28 +122,27 @@ export default {
   data() {
     return {
       items: [
-        { text: 'จัดการผู้ใช้งาน', icon: 'mdi-account-group' },
-        { text: 'จัดการโพส', icon: 'mdi-post' },
+        { text: 'จัดการผู้ใช้งาน', icon: 'mdi-account-group-outline' },
+        { text: 'จัดการโพสต์', icon: 'mdi-post-outline' },
         { text: 'จัดการกลุ่ม', icon: 'mdi-google-circles-communities' },
-        { text: 'จัดการบล็อก', icon: 'mdi-blogger' },
+        { text: 'ตั้งค่าระบบ', icon: 'mdi-cog-outline' },
       ],
       selectedItem: 0,
       users: [],
+      search: '',
       headers: [
-        { text: 'ID', value: 'user_id' },
+        { text: 'ID', value: 'user_id', width: '60px' },
         { text: 'Username', value: 'username' },
         { text: 'Email', value: 'email' },
         { text: 'Role', value: 'role' },
         { text: 'Status', value: 'status' },
         { text: 'Suspended Until', value: 'suspended_until' },
-        { text: 'Actions', value: 'actions', sortable: false },
+        { text: 'Actions', value: 'actions', sortable: false, align: 'end' },
       ],
       editDialog: false,
       selectedUser: null,
-      // --- 💡 จุดแก้ไข: เพิ่ม data สำหรับควบคุม dialog การลบ ---
       deleteDialog: false,
       userToDelete: null,
-      // --- จบจุดแก้ไข ---
     };
   },
   mounted() {
@@ -113,9 +156,11 @@ export default {
   methods: {
     async fetchUsers() {
       try {
-        const res = await this.$axios.get('/get_users.php');
+        const res = await this.$axios.get('/get_users.php?all=true'); // Assuming backend can handle 'all' flag
         if (res.data.status === 'success') {
           this.users = res.data.data;
+        } else {
+            this.users = [];
         }
       } catch (error) {
         console.error('Failed to fetch users', error);
@@ -127,9 +172,9 @@ export default {
     },
     getStatusColor(status) {
       if (status === 'suspended') return 'red';
-      else return 'green';
+      else if (status === 'active') return 'green';
+      return 'grey';
     },
-    // --- 💡 จุดแก้ไข: เพิ่ม methods สำหรับจัดการการลบ ---
     confirmDelete(user) {
       this.userToDelete = user;
       this.deleteDialog = true;
@@ -143,7 +188,7 @@ export default {
       try {
         const res = await this.$axios.post('/delete_user.php', { user_id: this.userToDelete.user_id });
         if (res.data.success) {
-          this.fetchUsers(); // โหลดรายชื่อผู้ใช้ใหม่
+          this.fetchUsers();
         } else {
           alert('Error deleting user: ' + res.data.error);
         }
@@ -151,10 +196,15 @@ export default {
         console.error('Failed to delete user', error);
         alert('Failed to connect to server for deletion.');
       } finally {
-        this.closeDeleteDialog(); // ปิด dialog เสมอ
+        this.closeDeleteDialog();
       }
     }
-    // --- จบจุดแก้ไข ---
   },
 };
 </script>
+
+<style scoped>
+.admin-dashboard-bg {
+    background-color: #F0F2F5;
+}
+</style>
