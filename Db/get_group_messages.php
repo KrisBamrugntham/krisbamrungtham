@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// ตั้งค่า Headers (สำคัญ: ต้องอยู่บนสุด)
+// ตั้งค่า Headers
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -27,12 +27,12 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // 💡 จุดแก้ไขสำคัญ: ใช้ m.room_id และ u.user_id 
+    // --- 💡 จุดแก้ไข: เปลี่ยนไปใช้ตาราง group_messages และ WHERE m.group_id ---
     $sql = "
         SELECT m.message_id, m.message, m.sent_at, u.user_id, u.username, u.avatar_url
-        FROM chat_messages m
+        FROM group_messages m
         JOIN users u ON m.sender_id = u.user_id
-        WHERE m.room_id = :group_id
+        WHERE m.group_id = :group_id
         ORDER BY m.sent_at ASC
     ";
     

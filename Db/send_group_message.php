@@ -27,8 +27,8 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // 💡 จุดแก้ไขสำคัญ: ใช้ room_id แทน group_id ในตาราง chat_messages
-    $sql = "INSERT INTO chat_messages (room_id, sender_id, message) VALUES (:group_id, :sender_id, :message)";
+    // --- 💡 จุดแก้ไข: เปลี่ยนไปใช้ตาราง group_messages ---
+    $sql = "INSERT INTO group_messages (group_id, sender_id, message) VALUES (:group_id, :sender_id, :message)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':group_id' => $data->group_id,
