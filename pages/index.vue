@@ -6,7 +6,7 @@
           Transform Your Future with Education
         </h1>
         <p class="text-h5 mb-6">
-          เข้าสู่ระบบด้วย Admin@gmail.com รหัส 123456 ครับอาจารย์ เพื่อเช็ค insert, delete, select, update
+          Robloxian online
         </p>
         <div>
           <v-btn

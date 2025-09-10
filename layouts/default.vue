@@ -21,6 +21,16 @@
           Admin Panel
         </v-btn>
         
+        <v-btn small text class="mr-2" to="/chat">
+          <v-icon left>mdi-chat</v-icon>
+          แชท
+        </v-btn>
+
+        <v-btn small text class="mr-2" to="/groups">
+          <v-icon left>mdi-account-group</v-icon>
+          กลุ่ม
+        </v-btn>
+        
         <v-avatar size="36" class="mr-2">
           <v-img :src="userAvatar" />
         </v-avatar>
@@ -59,7 +69,7 @@ export default {
       isLoggedIn: false,
       userName: '',
       userAvatar: 'https://randomuser.me/api/portraits/men/85.jpg',
-      userRole: '', // เพิ่มตัวแปรสำหรับเก็บ role
+      userRole: '',
       registerDialog: false,
       loginDialog: false,
     }
@@ -78,13 +88,15 @@ export default {
       const name = localStorage.getItem('edukris_name');
       this.isLoggedIn = !!name;
       this.userName = name || '';
-      this.userRole = localStorage.getItem('edukris_role') || ''; // ดึง role มาเก็บไว้
+      this.userRole = localStorage.getItem('edukris_role') || '';
+      this.userAvatar = localStorage.getItem('edukris_avatar') || 'https://randomuser.me/api/portraits/men/85.jpg';
     },
     logout() {
-      localStorage.clear(); // ลบข้อมูลทั้งหมดใน localStorage
+      localStorage.clear();
       this.isLoggedIn = false;
       this.userName = '';
-      this.userRole = ''; // เคลียร์ค่า role
+      this.userRole = '';
+      this.userAvatar = 'https://randomuser.me/api/portraits/men/85.jpg'; // Reset to default
       if (this.$route.path !== '/') {
         this.$router.push('/');
       } else {
