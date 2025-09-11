@@ -46,15 +46,16 @@
 
     <!-- Action Bar -->
     <v-card-actions class="pa-2">
-      <v-btn text>
-        <v-icon left>mdi-thumb-up-outline</v-icon>
+      <v-btn text :color="post.is_liked ? 'primary' : 'default'" @click="toggleLike" :loading="isLiking">
+        <v-icon left>{{ post.is_liked ? 'mdi-thumb-up' : 'mdi-thumb-up-outline' }}</v-icon>
         ถูกใจ
       </v-btn>
-      <v-btn text>
+      <v-btn text @click="focusCommentInput">
         <v-icon left>mdi-comment-outline</v-icon>
         ความคิดเห็น
       </v-btn>
       <v-spacer></v-spacer>
+      <span v-if="post.likes > 0" class="caption grey--text mr-2">{{ post.likes }} คนถูกใจสิ่งนี้</span>
     </v-card-actions>
 
     <v-divider></v-divider>
@@ -69,7 +70,7 @@
           <div class="font-weight-bold body-2">{{ comment.username }}</div>
           <div class="body-2" style="white-space: pre-wrap;">{{ comment.content }}</div>
         </div>
-        <v-btn v-if="isOwner" icon small class="ml-2" @click="deleteComment(comment.comment_id)">
+        <v-btn v-if="isOwner || post.is_group_admin" icon small class="ml-2" @click="deleteComment(comment.comment_id)">
           <v-icon small>mdi-delete-outline</v-icon>
         </v-btn>
       </div>
@@ -82,6 +83,7 @@
             <v-img :src="userAvatar"></v-img>
         </v-avatar>
         <v-text-field
+            ref="commentInput"
             v-model="newComment"
             placeholder="เขียนความคิดเห็น..."
             hide-details
@@ -116,6 +118,7 @@ export default {
       newComment: '',
       currentUserId: null,
       userAvatar: '',
+      isLiking: false,
     };
   },
   computed: {
@@ -133,6 +136,30 @@ export default {
     formatDate(dateString) {
       const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
       return new Date(dateString).toLocaleDateString('th-TH', options);
+    },
+    focusCommentInput() {
+      this.$refs.commentInput.focus();
+    },
+    async toggleLike() {
+      if (!this.currentUserId) return;
+      this.isLiking = true;
+      try {
+        const response = await this.$axios.post('/toggle_like.php', {
+          post_id: this.post.post_id,
+          user_id: this.currentUserId,
+        });
+        if (response.data.success) {
+          // Emit an event to the parent to refresh the posts
+          this.$emit('post-updated');
+        } else {
+          throw new Error(response.data.error || 'Failed to toggle like');
+        }
+      } catch (error) {
+        console.error('Error toggling like:', error);
+        alert('เกิดข้อผิดพลาดในการกดถูกใจ');
+      } finally {
+        this.isLiking = false;
+      }
     },
     editPost() {
       this.isEditing = true;
