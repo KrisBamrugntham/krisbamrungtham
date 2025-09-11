@@ -4,7 +4,7 @@
       <v-card-title class="justify-center">
         <span class="text-h5 font-weight-bold">สร้างกลุ่มใหม่ของคุณ</span>
       </v-card-title>
-       <v-card-subtitle class="text-center mt-1">แบ่งปันและเรียนรู้ร่วมกับผู้อื่น</v-card-subtitle>
+      <v-card-subtitle class="text-center mt-1">แบ่งปันและเรียนรู้ร่วมกับผู้อื่น</v-card-subtitle>
 
       <v-card-text class="mt-4">
         <v-form ref="form" v-model="valid">
@@ -26,12 +26,22 @@
             outlined
             class="mb-3"
           ></v-textarea>
-           <v-text-field
-            v-model="group.image_url"
-            label="URL รูปภาพกลุ่ม (ไม่จำเป็น)"
-            prepend-inner-icon="mdi-image-outline"
+          
+          <!-- Image Preview -->
+          <div v-if="imagePreviewUrl" class="mb-4 text-center">
+            <v-img :src="imagePreviewUrl" class="rounded-lg elevation-2" contain max-height="200"></v-img>
+          </div>
+
+          <v-file-input
+            v-model="imageFile"
+            label="เลือกรูปภาพกลุ่ม (ไม่จำเป็น)"
+            accept="image/*"
+            prepend-icon="mdi-camera"
             outlined
-          ></v-text-field>
+            show-size
+            @change="onImageSelected"
+          ></v-file-input>
+
         </v-form>
       </v-card-text>
 
@@ -56,8 +66,9 @@ export default {
       group: {
         name: '',
         description: '',
-        image_url: '', // Add image_url to the group object
       },
+      imageFile: null,
+      imagePreviewUrl: null,
     };
   },
   computed: {
@@ -73,20 +84,48 @@ export default {
   methods: {
     close() {
       this.$refs.form.reset();
-      this.group = { name: '', description: '', image_url: '' }; // Reset all fields
+      this.group = { name: '', description: '' };
+      this.imageFile = null;
+      this.imagePreviewUrl = null;
       this.dialog = false;
+    },
+    onImageSelected(file) {
+      this.imageFile = file;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.imagePreviewUrl = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        this.imagePreviewUrl = null;
+      }
     },
     async createGroup() {
       if (!this.$refs.form.validate()) return;
       
       this.loading = true;
       const userId = localStorage.getItem('edukris_id');
+      let imageUrl = null;
 
       try {
+        // 1. Upload image if selected
+        if (this.imageFile) {
+          const formData = new FormData();
+          formData.append('image', this.imageFile);
+          const uploadRes = await this.$axios.post('/upload_image.php', formData);
+          if (uploadRes.data.success) {
+            imageUrl = uploadRes.data.image_url;
+          } else {
+            throw new Error(uploadRes.data.error || 'Image upload failed');
+          }
+        }
+
+        // 2. Create group with the new image URL (or null)
         const res = await this.$axios.post('/create_group.php', {
           group_name: this.group.name,
           description: this.group.description,
-          image_url: this.group.image_url, // Send image_url to backend
+          image_url: imageUrl,
           created_by: userId,
         });
 
@@ -98,7 +137,7 @@ export default {
         }
       } catch (error) {
         console.error('Failed to create group', error);
-        alert('การเชื่อมต่อล้มเหลว ไม่สามารถสร้างกลุ่มได้');
+        alert('การเชื่อมต่อล้มเหลว ไม่สามารถสร้างกลุ่มได้: ' + error.message);
       } finally {
         this.loading = false;
       }

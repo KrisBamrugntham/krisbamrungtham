@@ -10,14 +10,18 @@
         <div class="caption grey--text text--darken-1">{{ formatDate(post.created_at) }}</div>
       </div>
       <v-spacer></v-spacer>
-      <v-menu v-if="isOwner" offset-y>
+      <v-menu v-if="isOwner || isAdmin" offset-y>
         <template v-slot:activator="{ on }">
           <v-btn icon v-on="on"><v-icon>mdi-dots-vertical</v-icon></v-btn>
         </template>
         <v-list dense>
-          <v-list-item @click="editPost">
+          <v-list-item v-if="isOwner" @click="editPost">
             <v-list-item-icon class="mr-3"><v-icon small>mdi-pencil-outline</v-icon></v-list-item-icon>
             <v-list-item-title>แก้ไขโพสต์</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="deletePost" :disabled="isDeleting">
+            <v-list-item-icon class="mr-3"><v-icon small color="error">mdi-delete-outline</v-icon></v-list-item-icon>
+            <v-list-item-title class="error--text">ลบโพสต์</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -118,18 +122,24 @@ export default {
       newComment: '',
       currentUserId: null,
       userAvatar: '',
+      userRole: null,
       isLiking: false,
+      isDeleting: false,
     };
   },
   computed: {
     isOwner() {
       return this.currentUserId === parseInt(this.post.user_id);
     },
+    isAdmin() {
+      return this.userRole === 'admin';
+    },
   },
   created() {
     if (process.client) {
       this.currentUserId = parseInt(localStorage.getItem('edukris_id'));
       this.userAvatar = localStorage.getItem('edukris_avatar') || 'https://randomuser.me/api/portraits/men/85.jpg';
+      this.userRole = localStorage.getItem('edukris_role');
     }
   },
   methods: {
@@ -149,7 +159,6 @@ export default {
           user_id: this.currentUserId,
         });
         if (response.data.success) {
-          // Emit an event to the parent to refresh the posts
           this.$emit('post-updated');
         } else {
           throw new Error(response.data.error || 'Failed to toggle like');
@@ -169,6 +178,28 @@ export default {
     },
     cancelEdit() {
       this.isEditing = false;
+    },
+    async deletePost() {
+      if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+        this.isDeleting = true;
+        try {
+          const res = await this.$axios.post('/delete_post.php', {
+            post_id: this.post.post_id,
+            user_id: this.currentUserId
+          });
+          if (res.data.success) {
+            this.$emit('post-deleted');
+            alert('ลบโพสต์สำเร็จแล้ว');
+          } else {
+            throw new Error(res.data.error || 'Could not delete post');
+          }
+        } catch (error) {
+          console.error('Failed to delete post:', error);
+          alert('เกิดข้อผิดพลาด: ' + error.message);
+        } finally {
+          this.isDeleting = false;
+        }
+      }
     },
     onEditedImageSelected(file) {
       this.editedImageFile = file;
@@ -216,7 +247,7 @@ export default {
           throw new Error(res.data.error);
         }
       } catch (error) {
-        console.error('Failed to update post', error);
+        console.error('Failed to update post:', error);
         alert('เกิดข้อผิดพลาดในการอัปเดตโพสต์: ' + error.message);
       } finally {
         this.isSavingEdit = false;
@@ -237,7 +268,7 @@ export default {
           alert('เกิดข้อผิดพลาด: ' + res.data.error);
         }
       } catch (error) {
-        console.error('Failed to post comment', error);
+        console.error('Failed to post comment:', error);
         alert('การเชื่อมต่อล้มเหลว ไม่สามารถแสดงความคิดเห็นได้');
       }
     },
@@ -254,7 +285,7 @@ export default {
             alert('ไม่สามารถลบคอมเมนต์ได้: ' + res.data.error);
           }
         } catch (error) {
-          console.error('Failed to delete comment', error);
+          console.error('Failed to delete comment:', error);
         }
       }
     }

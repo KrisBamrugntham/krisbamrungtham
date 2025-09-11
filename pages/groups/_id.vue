@@ -271,4 +271,22 @@ export default {
 /* Info Sidebar */
 .info-sidebar { background-color: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 100%; }
 .v-tabs-items { background-color: white; }
+
+/* Responsive Adjustments */
+@media (max-width: 959px) {
+  .fill-height {
+    height: auto !important;
+  }
+  .v-row.fill-height {
+    flex-direction: column;
+  }
+  .chat-area {
+    height: 65vh; /* Assign a substantial height for chat on mobile */
+  }
+  .info-sidebar {
+    height: auto; /* Let the sidebar take its own height */
+    border-left: none;
+    border-top: 1px solid #e0e0e0;
+  }
+}
 </style>
