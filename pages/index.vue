@@ -192,6 +192,13 @@ export default {
     }
   },
   async mounted() {
+    if (process.client) {
+      const isLoggedIn = !!localStorage.getItem('edukris_name');
+      if (isLoggedIn) {
+        this.$router.push('/index-login');
+        return;
+      }
+    }
     try {
       const res = await this.$axios.get('/get_users.php')
       const data = res.data

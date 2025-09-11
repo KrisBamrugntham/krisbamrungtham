@@ -1,4 +1,16 @@
 <?php
+// --- Add this CORS section ---
+header("Access-Control-Allow-Origin: *"); // Allows all origins. For production, you might want to restrict this to 'http://localhost:3000'
+header("Access-Control-Allow-Methods: POST, OPTIONS, DELETE");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+// --- End of CORS section ---
+
 header('Content-Type: application/json');
 include 'connectdb.php';
 
@@ -12,6 +24,9 @@ if (isset($data['post_id']) && isset($data['user_id'])) {
 
     if ($post_id && $user_id) {
         try {
+            $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
             // Get user role and post owner
             $user_sql = "SELECT role FROM users WHERE user_id = :user_id";
             $user_stmt = $pdo->prepare($user_sql);
@@ -34,8 +49,9 @@ if (isset($data['post_id']) && isset($data['user_id'])) {
                 // Authorized to delete
                 $pdo->beginTransaction();
 
-                // 1. Delete likes associated with the post
-                $likes_sql = "DELETE FROM post_likes WHERE post_id = :post_id";
+                // 1. Delete likes associated with the post. 
+                // Note: The table name in your SQL schema is `likes`, not `post_likes`
+                $likes_sql = "DELETE FROM likes WHERE post_id = :post_id";
                 $likes_stmt = $pdo->prepare($likes_sql);
                 $likes_stmt->execute([':post_id' => $post_id]);
 

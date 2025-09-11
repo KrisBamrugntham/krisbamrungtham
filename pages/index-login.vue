@@ -1,5 +1,5 @@
 <template>
-  <div class="feed-background">
+  <div>
     <v-container fluid>
       <v-row class="fill-height">
         <!-- Left Column -->
@@ -9,7 +9,7 @@
               <v-img :src="userAvatar" />
             </v-avatar>
             <h2 class="text-h6 font-weight-bold">{{ userName }}</h2>
-            <p class="body-2 grey--text text--darken-1 mb-4">{{ userEmail }}</p>
+            <p class="body-2 mb-4">{{ userEmail }}</p>
             <v-divider class="my-2"></v-divider>
             <div class="text-left body-2 my-4">
               <p><v-icon small left>mdi-gender-male-female</v-icon><strong>เพศ:</strong> {{ userGender }}</p>
@@ -43,7 +43,7 @@
                     </v-list-item-action>
                   </v-list-item>
                 </v-list>
-                 <div v-else class="text-center grey--text pa-4">ไม่มีเพื่อนแนะนำ</div>
+                 <div v-else class="text-center pa-4">ไม่มีเพื่อนแนะนำ</div>
               </v-tab-item>
               <v-tab-item>
                 <v-list dense v-if="friendRequests.length > 0">
@@ -60,7 +60,7 @@
                     </v-list-item-action>
                   </v-list-item>
                 </v-list>
-                <div v-else class="text-center grey--text pa-4">ไม่มีคำขอเป็นเพื่อน</div>
+                <div v-else class="text-center pa-4">ไม่มีคำขอเป็นเพื่อน</div>
               </v-tab-item>
             </v-tabs-items>
           </v-card>
@@ -74,7 +74,7 @@
                 <v-avatar size="40" class="mr-4">
                   <v-img :src="userAvatar" />
                 </v-avatar>
-                <v-textarea v-model="newPostContent" placeholder="คุณกำลังคิดอะไรอยู่..." rows="2" auto-grow hide-details solo flat background-color="grey lighten-4"></v-textarea>
+                <v-textarea v-model="newPostContent" placeholder="คุณกำลังคิดอะไรอยู่..." rows="2" auto-grow hide-details solo flat></v-textarea>
               </div>
               <div v-if="newPostImageUrl" class="mt-4 text-center">
                   <v-img :src="newPostImageUrl" class="rounded-lg" contain max-height="250"></v-img>
@@ -98,7 +98,7 @@
           </div>
           <div v-else>
             <post-card v-for="post in posts" :key="post.post_id" :post="post" @post-updated="fetchPosts" @comment-added="fetchPosts" @comment-deleted="fetchPosts" @post-deleted="fetchPosts" class="mb-4" elevation="1" />
-            <div v-if="posts.length === 0" class="text-center grey--text mt-16">
+            <div v-if="posts.length === 0" class="text-center mt-16">
                 <v-icon large color="grey lighten-1">mdi-text-box-outline</v-icon>
                 <p class="mt-4">ยังไม่มีโพสต์ในฟีดของคุณ</p>
             </div>
@@ -123,7 +123,7 @@
                 </v-list-item-icon>
               </v-list-item>
             </v-list>
-            <div v-else class="text-center grey--text pa-8">
+            <div v-else class="text-center pa-8">
               ไม่มีเพื่อนออนไลน์
             </div>
           </v-card>
@@ -310,11 +310,6 @@ export default {
 </script>
 
 <style scoped>
-.feed-background {
-  background-color: #F0F2F5;
-  min-height: calc(100vh - 64px); /* Adjust based on app-bar height */
-}
-
 .profile-card, .create-post-card, .online-friends-card, .v-card {
   border-radius: 12px;
 }

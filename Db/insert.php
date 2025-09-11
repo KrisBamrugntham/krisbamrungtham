@@ -40,6 +40,18 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // Check for existing email
+    $sql_check = "SELECT user_id FROM users WHERE email = :email";
+    $stmt_check = $pdo->prepare($sql_check);
+    $stmt_check->bindParam(':email', $data->email);
+    $stmt_check->execute();
+
+    if ($stmt_check->fetch()) {
+        http_response_code(409); // Conflict
+        echo json_encode(["success" => false, "error" => "เมลนี้ได้ถูกลงทะเบียนไว้แล้ว"]);
+        exit();
+    }
+
     // ไม่จำเป็นต้องใส่ role ในคำสั่ง INSERT เพราะฐานข้อมูลจะใส่ค่า default 'member' ให้
     $sql = "INSERT INTO users (username, email, password_hash, gender, interest, avatar_url) 
             VALUES (:username, :email, :password, :gender, :interest, :avatar_url)";
@@ -59,9 +71,11 @@ try {
     $stmt->bindParam(':avatar_url', $avatar_url_value);
 
     $stmt->execute();
+    
+    $user_id = $pdo->lastInsertId();
 
     http_response_code(201);
-    echo json_encode(["success" => true, "message" => "User registered successfully"]);
+    echo json_encode(["success" => true, "message" => "User registered successfully", "user_id" => $user_id, "avatar_url" => $avatar_url_value]);
 
 } catch (PDOException $e) {
     send_json_error("Database Error", 500, $e->getMessage());

@@ -34,7 +34,7 @@
               <v-divider :key="`divider-${index}`"></v-divider>
             </template>
           </v-list-item-group>
-           <div v-if="filteredFriends.length === 0" class="text-center grey--text pa-4">
+           <div v-if="filteredFriends.length === 0" class="text-center pa-4">
               ไม่พบรายชื่อเพื่อน
             </div>
         </v-list>
@@ -109,12 +109,8 @@ export default {
 </script>
 
 <style scoped>
-.chat-container {
-  background-color: #F0F2F5;
-}
 .conversations-list-col {
   border-right: 1px solid #e0e0e0;
-  background-color: white;
   display: flex;
   flex-direction: column;
   height: 100%;

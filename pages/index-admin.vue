@@ -1,10 +1,10 @@
 <template>
-  <v-container fluid class="admin-dashboard-bg">
+  <v-container fluid>
     <!-- Header -->
     <v-row>
       <v-col cols="12">
         <h1 class="text-h4 font-weight-bold">Admin Dashboard</h1>
-        <p class="grey--text text--darken-1">ภาพรวมและเครื่องมือจัดการระบบ</p>
+        <p>ภาพรวมและเครื่องมือจัดการระบบ</p>
       </v-col>
     </v-row>
 
@@ -17,7 +17,7 @@
           </v-avatar>
           <div>
             <p class="text-h4 font-weight-bold mb-0">{{ users.length }}</p>
-            <p class="grey--text text--darken-1 mb-0">ผู้ใช้ทั้งหมด</p>
+            <p class="mb-0">ผู้ใช้ทั้งหมด</p>
           </div>
         </v-card>
       </v-col>
@@ -28,7 +28,7 @@
           </v-avatar>
           <div>
             <p class="text-h4 font-weight-bold mb-0">{{ posts.length }}</p>
-            <p class="grey--text text--darken-1 mb-0">โพสต์ทั้งหมด</p>
+            <p class="mb-0">โพสต์ทั้งหมด</p>
           </div>
         </v-card>
       </v-col>
@@ -39,7 +39,7 @@
           </v-avatar>
           <div>
             <p class="text-h4 font-weight-bold mb-0">{{ groups.length }}</p>
-            <p class="grey--text text--darken-1 mb-0">กลุ่มทั้งหมด</p>
+            <p class="mb-0">กลุ่มทั้งหมด</p>
           </div>
         </v-card>
       </v-col>
@@ -108,8 +108,27 @@
             </v-data-table>
           </div>
 
+          <!-- Group Management -->
+          <div v-if="selectedItem === 2">
+            <v-card-title>
+              จัดการกลุ่ม
+              <v-spacer></v-spacer>
+              <v-text-field v-model="groupSearch" append-icon="mdi-magnify" label="ค้นหากลุ่ม..." single-line hide-details dense outlined></v-text-field>
+            </v-card-title>
+            <v-data-table :headers="groupHeaders" :items="groups" :search="groupSearch" :items-per-page="10">
+                <template v-slot:item.description="{ item }">
+                    <div class="text-truncate" style="max-width: 300px;">{{ item.description }}</div>
+                </template>
+                <template v-slot:item.actions="{ item }">
+                    <v-btn icon small @click="openDeleteDialog(item, 'group')">
+                        <v-icon small>mdi-delete-outline</v-icon>
+                    </v-btn>
+                </template>
+            </v-data-table>
+          </div>
+
           <!-- Other Management Sections (Coming Soon) -->
-          <div v-if="selectedItem > 1" class="pa-8 text-center grey--text">
+          <div v-if="selectedItem > 2" class="pa-8 text-center">
             <v-icon size="60" class="mb-4">{{ items[selectedItem].icon }}</v-icon>
             <h2>{{ items[selectedItem].text }}</h2>
             <p>Coming soon...</p>
@@ -125,8 +144,8 @@
       <v-card rounded="lg" class="pa-4">
         <v-card-title class="text-h5 justify-center">ยืนยันการลบ</v-card-title>
         <v-card-text class="text-center mt-2">
-          คุณแน่ใจหรือไม่ว่าต้องการลบ {{ deleteDialog.type === 'user' ? 'ผู้ใช้' : 'โพสต์' }} 
-          <strong class="red--text">{{ deleteDialog.item ? (deleteDialog.item.username || `ID: ${deleteDialog.item.post_id}`) : '' }}</strong> 
+          คุณแน่ใจหรือไม่ว่าต้องการลบ {{ deleteDialog.type === 'user' ? 'ผู้ใช้' : deleteDialog.type === 'post' ? 'โพสต์' : 'กลุ่ม' }} 
+          <strong class="red--text">{{ deleteDialog.item ? (deleteDialog.item.username || deleteDialog.item.name || `ID: ${deleteDialog.item.post_id || deleteDialog.item.group_id}`) : '' }}</strong> 
           ออกจากระบบอย่างถาวร?
         </v-card-text>
         <v-card-actions class="mt-4">
@@ -179,6 +198,14 @@ export default {
       ],
       // Groups
       groups: [],
+      groupSearch: '',
+      groupHeaders: [
+          { text: 'Group ID', value: 'group_id', width: '100px' },
+          { text: 'Name', value: 'name' },
+          { text: 'Description', value: 'description' },
+          { text: 'Created At', value: 'created_at' },
+          { text: 'Actions', value: 'actions', sortable: false, align: 'end' },
+      ],
       // Dialogs
       editDialog: false,
       selectedUser: null,
@@ -250,6 +277,8 @@ export default {
         await this.deleteUser();
       } else if (this.deleteDialog.type === 'post') {
         await this.deletePost();
+      } else if (this.deleteDialog.type === 'group') {
+        await this.deleteGroup();
       }
       
       this.closeDeleteDialog();
@@ -282,13 +311,23 @@ export default {
             console.error('Failed to delete post', error);
             alert('Failed to connect to server for deletion.');
         }
+    },
+    async deleteGroup() {
+        try {
+            const res = await this.$axios.post('/delete_group.php', { group_id: this.deleteDialog.item.group_id });
+            if (res.data.success) {
+            this.fetchGroups();
+            } else {
+            alert('Error deleting group: ' + res.data.error);
+            }
+        } catch (error) {
+            console.error('Failed to delete group', error);
+            alert('Failed to connect to server for deletion.');
+        }
     }
   },
 };
 </script>
 
 <style scoped>
-.admin-dashboard-bg {
-    background-color: #F0F2F5;
-}
 </style>

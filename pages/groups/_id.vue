@@ -6,13 +6,13 @@
     </div>
 
     <!-- Not a Member State -->
-    <div v-else-if="membershipStatus !== 'member'" class="d-flex fill-height align-center justify-center flex-grow-1 not-member-bg">
+    <div v-else-if="membershipStatus !== 'member'" class="d-flex fill-height align-center justify-center flex-grow-1">
       <v-card class="pa-4 pa-md-8 text-center" max-width="500" rounded="xl">
-        <v-icon size="80" color="grey lighten-1">mdi-account-lock-outline</v-icon>
+        <v-icon size="80">mdi-account-lock-outline</v-icon>
         <h2 class="text-h5 font-weight-bold mt-4">คุณยังไม่ได้เป็นสมาชิก</h2>
-        <p v-if="membershipStatus === 'pending'" class="mt-2 grey--text text--darken-1">คำขอเข้าร่วมกลุ่มของคุณกำลังรอการอนุมัติ</p>
-        <p v-else-if="membershipStatus === 'rejected'" class="mt-2 grey--text text--darken-1">คำขอเข้าร่วมกลุ่มของคุณถูกปฏิเสธ</p>
-        <p v-else class="mt-2 grey--text text--darken-1">ส่งคำขอเพื่อเข้าร่วมพูดคุยในกลุ่มนี้</p>
+        <p v-if="membershipStatus === 'pending'" class="mt-2">คำขอเข้าร่วมกลุ่มของคุณกำลังรอการอนุมัติ</p>
+        <p v-else-if="membershipStatus === 'rejected'" class="mt-2">คำขอเข้าร่วมกลุ่มของคุณถูกปฏิเสธ</p>
+        <p v-else class="mt-2">ส่งคำขอเพื่อเข้าร่วมพูดคุยในกลุ่มนี้</p>
         <div class="mt-6">
           <v-btn v-if="membershipStatus === 'not_member' || membershipStatus === 'rejected'" color="primary" depressed large @click="sendJoinRequest" :loading="requesting">
             <v-icon left>mdi-email-send-outline</v-icon>ส่งคำขอเข้าร่วม
@@ -36,7 +36,7 @@
         </v-toolbar>
         
         <v-card-text ref="messageContainer" class="flex-grow-1 overflow-y-auto pa-4 chat-area">
-          <div v-for="msg in messages" :key="msg.message_id" class="message-row d-flex my-1" :class="{ 'justify-end': msg.user_id == currentUserId }">
+          <div v-for="msg in messages" :key="msg.message_id" class="message-row d-flex my-1">
             <v-avatar v-if="msg.user_id != currentUserId" size="32" class="mr-2 align-self-start flex-shrink-0">
               <v-img :src="msg.avatar_url || '/default.png'"></v-img>
             </v-avatar>
@@ -46,7 +46,7 @@
               <div class="message-time">{{ formatTime(msg.created_at) }}</div>
             </div>
           </div>
-           <div v-if="messages.length === 0" class="text-center grey--text mt-10">เริ่มต้นการสนทนาในกลุ่มได้เลย!</div>
+           <div v-if="messages.length === 0" class="text-center mt-10">เริ่มต้นการสนทนาในกลุ่มได้เลย!</div>
         </v-card-text>
 
         <div class="chat-footer pa-2 flex-shrink-0">
@@ -61,7 +61,7 @@
             <v-img :src="group.image_url || 'https://picsum.photos/seed/' + groupId + '/500/300'" height="150" class="rounded-lg mb-4" gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)">
                  <div class="d-flex fill-height justify-center align-center white--text text-h5 font-weight-bold">{{ group.group_name }}</div>
             </v-img>
-            <p class="grey--text text--darken-2">{{ group.description }}</p>
+            <p>{{ group.description }}</p>
         </div>
         <v-divider></v-divider>
         <v-tabs v-model="adminTab" background-color="transparent" grow>
@@ -96,7 +96,7 @@
                         </v-list-item-action>
                     </v-list-item>
                 </v-list>
-                <div v-else class="text-center grey--text pa-8">ไม่มีคำขอเข้าร่วม</div>
+                <div v-else class="text-center pa-8">ไม่มีคำขอเข้าร่วม</div>
             </v-tab-item>
         </v-tabs-items>
       </v-col>
@@ -252,25 +252,51 @@ export default {
 
 <style scoped>
 .fill-height { height: calc(100vh - 64px); }
-.not-member-bg { background-color: #F0F2F5; }
 
 /* Chat Area */
-.chat-header { border-bottom: 1px solid #e0e0e0 !important; background-color: white; }
+.chat-header { border-bottom: 1px solid #e0e0e0 !important; }
 .chat-area { 
-    background-color: #EFEAE2; 
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARMAAAARMAAQMAAAA/3/8OAAAABlBMVEXd3d3d3d3d3d0m875OAAAAAXRSTlMAQObYZgAAAB9JREFUeN7twQENAAAAwiD7p7bHBwwAAAAg7AEnYgAB9p0s9wAAAABJRU5ErkJggg==');
 }
-.message-row { max-width: 75%; }
-.message-bubble { padding: 6px 12px; border-radius: 12px; position: relative; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
-.message-bubble.sent { background-color: #DCF8C6; border-top-right-radius: 0; }
-.message-bubble.received { background-color: #FFFFFF; border-top-left-radius: 0; }
-.message-content { padding-bottom: 16px; }
-.message-time { font-size: 0.7rem; color: grey; position: absolute; bottom: 4px; right: 8px; }
-.chat-footer { background-color: #F0F2F5; border-top: 1px solid #e0e0e0; display: flex; align-items: center; }
+.message-bubble { 
+  max-width: 75%;
+  padding: 6px 12px; 
+  border-radius: 12px; 
+  position: relative; 
+  word-wrap: break-word; 
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05); 
+}
+.message-bubble.sent { 
+  background-color: #DCF8C6; 
+  border-top-right-radius: 0; 
+  margin-left: auto;
+}
+.message-bubble.received { 
+  background-color: #FFFFFF; 
+  border-top-left-radius: 0; 
+}
+.message-content { 
+  padding-bottom: 16px; 
+  color: black !important;
+}
+.message-time { font-size: 0.7rem; position: absolute; bottom: 4px; right: 8px; }
+.chat-footer { border-top: 1px solid #e0e0e0; display: flex; align-items: center; }
 
 /* Info Sidebar */
-.info-sidebar { background-color: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 100%; }
-.v-tabs-items { background-color: white; }
+.info-sidebar { border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; height: 100%; }
+
+/* Dark Theme Overrides */
+.theme--dark .message-bubble.received {
+  background-color: #262626 !important;
+}
+
+.theme--dark .message-bubble.sent {
+  background-color: #056162 !important;
+}
+
+.theme--dark .message-bubble.sent .message-content {
+  color: white !important;
+}
 
 /* Responsive Adjustments */
 @media (max-width: 959px) {
