@@ -97,7 +97,7 @@
             <v-progress-circular size="64" indeterminate color="primary"></v-progress-circular>
           </div>
           <div v-else>
-            <post-card v-for="post in posts" :key="post.post_id" :post="post" @post-updated="fetchPosts" @comment-added="fetchPosts" @comment-deleted="fetchPosts" class="mb-4" elevation="1" />
+            <post-card v-for="post in posts" :key="post.post_id" :post="post" @post-updated="fetchPosts" @comment-added="fetchPosts" @comment-deleted="fetchPosts" @post-deleted="fetchPosts" class="mb-4" elevation="1" />
             <div v-if="posts.length === 0" class="text-center grey--text mt-16">
                 <v-icon large color="grey lighten-1">mdi-text-box-outline</v-icon>
                 <p class="mt-4">ยังไม่มีโพสต์ในฟีดของคุณ</p>
@@ -242,7 +242,7 @@ export default {
     async fetchPosts() {
         this.loadingPosts = true;
         try {
-            const res = await this.$axios.get('/get_posts.php');
+            const res = await this.$axios.get(`/get_posts.php?user_id=${this.currentUserId}`);
             if (res.data.status === 'success') {
                 this.posts = res.data.data;
             }

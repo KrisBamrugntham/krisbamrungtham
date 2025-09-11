@@ -27,7 +27,7 @@
             <v-icon color="success">mdi-post-outline</v-icon>
           </v-avatar>
           <div>
-            <p class="text-h4 font-weight-bold mb-0">1,204</p>
+            <p class="text-h4 font-weight-bold mb-0">{{ posts.length }}</p>
             <p class="grey--text text--darken-1 mb-0">โพสต์ทั้งหมด</p>
           </div>
         </v-card>
@@ -38,7 +38,7 @@
             <v-icon color="orange">mdi-google-circles-communities</v-icon>
           </v-avatar>
           <div>
-            <p class="text-h4 font-weight-bold mb-0">58</p>
+            <p class="text-h4 font-weight-bold mb-0">{{ groups.length }}</p>
             <p class="grey--text text--darken-1 mb-0">กลุ่มทั้งหมด</p>
           </div>
         </v-card>
@@ -67,13 +67,14 @@
 
       <v-col cols="12" md="9">
         <v-card rounded="lg">
+          <!-- User Management -->
           <div v-if="selectedItem === 0">
             <v-card-title>
               จัดการผู้ใช้งาน
               <v-spacer></v-spacer>
               <v-text-field v-model="search" append-icon="mdi-magnify" label="ค้นหาผู้ใช้..." single-line hide-details dense outlined></v-text-field>
             </v-card-title>
-            <v-data-table :headers="headers" :items="users" :search="search" :items-per-page="10">
+            <v-data-table :headers="userHeaders" :items="users" :search="search" :items-per-page="10">
               <template v-slot:item.status="{ item }">
                 <v-chip :color="getStatusColor(item.status)" dark small>{{ item.status }}</v-chip>
               </template>
@@ -81,13 +82,34 @@
                 <v-btn icon small class="mr-2" @click="editUser(item)">
                   <v-icon small>mdi-pencil-outline</v-icon>
                 </v-btn>
-                <v-btn icon small @click="confirmDelete(item)">
+                <v-btn icon small @click="openDeleteDialog(item, 'user')">
                   <v-icon small>mdi-delete-outline</v-icon>
                 </v-btn>
               </template>
             </v-data-table>
           </div>
-          <div v-else class="pa-8 text-center grey--text">
+
+          <!-- Post Management -->
+          <div v-if="selectedItem === 1">
+            <v-card-title>
+              จัดการโพสต์
+              <v-spacer></v-spacer>
+              <v-text-field v-model="postSearch" append-icon="mdi-magnify" label="ค้นหาโพสต์..." single-line hide-details dense outlined></v-text-field>
+            </v-card-title>
+            <v-data-table :headers="postHeaders" :items="posts" :search="postSearch" :items-per-page="10">
+                <template v-slot:item.content="{ item }">
+                    <div class="text-truncate" style="max-width: 300px;">{{ item.content }}</div>
+                </template>
+                <template v-slot:item.actions="{ item }">
+                    <v-btn icon small @click="openDeleteDialog(item, 'post')">
+                        <v-icon small>mdi-delete-outline</v-icon>
+                    </v-btn>
+                </template>
+            </v-data-table>
+          </div>
+
+          <!-- Other Management Sections (Coming Soon) -->
+          <div v-if="selectedItem > 1" class="pa-8 text-center grey--text">
             <v-icon size="60" class="mb-4">{{ items[selectedItem].icon }}</v-icon>
             <h2>{{ items[selectedItem].text }}</h2>
             <p>Coming soon...</p>
@@ -98,19 +120,23 @@
 
     <edit-user-form v-model="editDialog" :user="selectedUser" @user-updated="fetchUsers" />
 
-    <v-dialog v-model="deleteDialog" max-width="450">
+    <!-- Generic Deletion Dialog -->
+    <v-dialog v-model="deleteDialog.show" max-width="450">
       <v-card rounded="lg" class="pa-4">
-        <v-card-title class="text-h5 justify-center">ยืนยันการลบผู้ใช้</v-card-title>
+        <v-card-title class="text-h5 justify-center">ยืนยันการลบ</v-card-title>
         <v-card-text class="text-center mt-2">
-          คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ <strong class="red--text">{{ userToDelete ? userToDelete.username : '' }}</strong> ออกจากระบบอย่างถาวร?
+          คุณแน่ใจหรือไม่ว่าต้องการลบ {{ deleteDialog.type === 'user' ? 'ผู้ใช้' : 'โพสต์' }} 
+          <strong class="red--text">{{ deleteDialog.item ? (deleteDialog.item.username || `ID: ${deleteDialog.item.post_id}`) : '' }}</strong> 
+          ออกจากระบบอย่างถาวร?
         </v-card-text>
         <v-card-actions class="mt-4">
           <v-btn text large @click="closeDeleteDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="red" dark large depressed @click="deleteUserConfirmed">ยืนยันการลบ</v-btn>
+          <v-btn color="red" dark large depressed @click="deleteConfirmed">ยืนยันการลบ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
   </v-container>
 </template>
 
@@ -121,6 +147,7 @@ export default {
   components: { EditUserForm },
   data() {
     return {
+      currentUserId: null,
       items: [
         { text: 'จัดการผู้ใช้งาน', icon: 'mdi-account-group-outline' },
         { text: 'จัดการโพสต์', icon: 'mdi-post-outline' },
@@ -128,9 +155,10 @@ export default {
         { text: 'ตั้งค่าระบบ', icon: 'mdi-cog-outline' },
       ],
       selectedItem: 0,
+      // Users
       users: [],
       search: '',
-      headers: [
+      userHeaders: [
         { text: 'ID', value: 'user_id', width: '60px' },
         { text: 'Username', value: 'username' },
         { text: 'Email', value: 'email' },
@@ -139,10 +167,26 @@ export default {
         { text: 'Suspended Until', value: 'suspended_until' },
         { text: 'Actions', value: 'actions', sortable: false, align: 'end' },
       ],
+      // Posts
+      posts: [],
+      postSearch: '',
+      postHeaders: [
+          { text: 'Post ID', value: 'post_id', width: '100px' },
+          { text: 'Content', value: 'content' },
+          { text: 'Author', value: 'username' },
+          { text: 'Created At', value: 'created_at' },
+          { text: 'Actions', value: 'actions', sortable: false, align: 'end' },
+      ],
+      // Groups
+      groups: [],
+      // Dialogs
       editDialog: false,
       selectedUser: null,
-      deleteDialog: false,
-      userToDelete: null,
+      deleteDialog: {
+          show: false,
+          item: null,
+          type: null, // 'user' or 'post'
+      },
     };
   },
   mounted() {
@@ -151,21 +195,33 @@ export default {
       this.$router.push('/');
       return;
     }
+    this.currentUserId = parseInt(localStorage.getItem('edukris_id'));
     this.fetchUsers();
+    this.fetchPosts();
+    this.fetchGroups();
   },
   methods: {
+    // --- Data Fetching ---
     async fetchUsers() {
       try {
-        const res = await this.$axios.get('/get_users.php?all=true'); // Assuming backend can handle 'all' flag
-        if (res.data.status === 'success') {
-          this.users = res.data.data;
-        } else {
-            this.users = [];
-        }
-      } catch (error) {
-        console.error('Failed to fetch users', error);
-      }
+        const res = await this.$axios.get('/get_users.php?all=true');
+        if (res.data.status === 'success') this.users = res.data.data;
+      } catch (error) { console.error('Failed to fetch users', error); }
     },
+    async fetchPosts() {
+      try {
+        const res = await this.$axios.get(`/get_posts.php?user_id=${this.currentUserId}`);
+        if (res.data.status === 'success') this.posts = res.data.data;
+      } catch (error) { console.error('Failed to fetch posts', error); }
+    },
+    async fetchGroups() {
+      try {
+        const res = await this.$axios.get('/get_groups.php');
+        if (res.data.status === 'success') this.groups = res.data.data;
+      } catch (error) { console.error('Failed to fetch groups', error); }
+    },
+
+    // --- User Actions ---
     editUser(user) {
       this.selectedUser = { ...user };
       this.editDialog = true;
@@ -175,29 +231,57 @@ export default {
       else if (status === 'active') return 'green';
       return 'grey';
     },
-    confirmDelete(user) {
-      this.userToDelete = user;
-      this.deleteDialog = true;
+
+    // --- Generic Deletion --- 
+    openDeleteDialog(item, type) {
+      this.deleteDialog.item = item;
+      this.deleteDialog.type = type;
+      this.deleteDialog.show = true;
     },
     closeDeleteDialog() {
-      this.deleteDialog = false;
-      this.userToDelete = null;
+      this.deleteDialog.show = false;
+      this.deleteDialog.item = null;
+      this.deleteDialog.type = null;
     },
-    async deleteUserConfirmed() {
-      if (!this.userToDelete) return;
-      try {
-        const res = await this.$axios.post('/delete_user.php', { user_id: this.userToDelete.user_id });
-        if (res.data.success) {
-          this.fetchUsers();
-        } else {
-          alert('Error deleting user: ' + res.data.error);
-        }
-      } catch (error) {
-        console.error('Failed to delete user', error);
-        alert('Failed to connect to server for deletion.');
-      } finally {
-        this.closeDeleteDialog();
+    async deleteConfirmed() {
+      if (!this.deleteDialog.item || !this.deleteDialog.type) return;
+
+      if (this.deleteDialog.type === 'user') {
+        await this.deleteUser();
+      } else if (this.deleteDialog.type === 'post') {
+        await this.deletePost();
       }
+      
+      this.closeDeleteDialog();
+    },
+    async deleteUser() {
+        try {
+            const res = await this.$axios.post('/delete_user.php', { user_id: this.deleteDialog.item.user_id });
+            if (res.data.success) {
+            this.fetchUsers();
+            } else {
+            alert('Error deleting user: ' + res.data.error);
+            }
+        } catch (error) {
+            console.error('Failed to delete user', error);
+            alert('Failed to connect to server for deletion.');
+        }
+    },
+    async deletePost() {
+        try {
+            const res = await this.$axios.post('/delete_post.php', { 
+                post_id: this.deleteDialog.item.post_id,
+                user_id: this.currentUserId // Admin user ID
+            });
+            if (res.data.success) {
+            this.fetchPosts();
+            } else {
+            alert('Error deleting post: ' + res.data.error);
+            }
+        } catch (error) {
+            console.error('Failed to delete post', error);
+            alert('Failed to connect to server for deletion.');
+        }
     }
   },
 };

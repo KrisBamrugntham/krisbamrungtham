@@ -137,4 +137,16 @@ export default {
     color: #3F51B5 !important; /* Indigo */
 }
 
+/* Responsive Adjustments */
+@media (max-width: 959px) {
+  .fill-height {
+    height: auto !important;
+  }
+  .conversations-list-col {
+    height: auto;
+    max-height: 40vh; /* Limit height on mobile */
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+}
 </style>
