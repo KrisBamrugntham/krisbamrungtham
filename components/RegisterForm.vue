@@ -70,7 +70,7 @@
         </div>
         
         <v-alert v-if="error" type="error" dense text class="mb-4">{{ error }}</v-alert>
-        <v-alert v-if="success" type="success" dense text class="mb-4">ลงทะเบียนสำเร็จ! กำลังนำคุณเข้าสู่ระบบ...</v-alert>
+        <v-alert v-if="success" type="success" dense text class="mb-4">ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ</v-alert>
 
         <v-btn color="primary" class="mt-2" large block type="submit" :loading="loading" :disabled="!valid || loading">
           ลงทะเบียน
@@ -160,20 +160,9 @@ export default {
           
           if (data.success) {
             this.success = true;
-            // The login logic will be handled by the login form after this.
-            // For now, just show success and redirect.
-            localStorage.setItem('edukris_id', data.user_id);
-            localStorage.setItem('edukris_name', this.form.name);
-            localStorage.setItem('edukris_email', this.form.email);
-            localStorage.setItem('edukris_gender', this.form.gender);
-            localStorage.setItem('edukris_interests', this.form.interests.join(','));
-            localStorage.setItem('edukris_avatar', data.avatar_url);
-            
-            window.dispatchEvent(new Event('storage'));
-
             setTimeout(() => {
               this.dialog = false;
-              this.$router.push('/index-login');
+              this.$emit('switch-to-login');
             }, 1500);
           } else {
             this.error = data.error || 'เกิดข้อผิดพลาดในการลงทะเบียน';

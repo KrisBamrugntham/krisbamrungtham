@@ -13,9 +13,6 @@
       </v-list-item>
       <v-spacer></v-spacer>
       <v-btn icon>
-        <v-icon>mdi-video-outline</v-icon>
-      </v-btn>
-      <v-btn icon>
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-toolbar>
@@ -23,15 +20,15 @@
     <!-- Welcome Message -->
     <div v-if="!friend" class="d-flex fill-height align-center justify-center text-center welcome-message">
         <div>
-            <v-icon size="100" color="grey lighten-2">mdi-wechat</v-icon>
-            <h2 class="mt-4 font-weight-light grey--text text--darken-1">Edukris Chat</h2>
-            <p class="grey--text">เลือกเพื่อนเพื่อเริ่มการสนทนา</p>
+            <v-icon size="100">mdi-wechat</v-icon>
+            <h2 class="mt-4 font-weight-light">Edukris Chat</h2>
+            <p>เลือกเพื่อนเพื่อเริ่มการสนทนา</p>
         </div>
     </div>
 
     <!-- Messages Area -->
     <v-card-text v-else ref="messageContainer" class="flex-grow-1 overflow-y-auto pa-4 chat-area">
-      <div v-for="msg in messages" :key="msg.chat_id" class="message-row d-flex my-1" :class="{ 'justify-end': msg.sender_id == currentUserId }">
+      <div v-for="msg in messages" :key="msg.chat_id" class="message-row d-flex my-1">
         <div class="message-bubble" :class="{ 'sent': msg.sender_id == currentUserId, 'received': msg.sender_id != currentUserId }">
           <div class="message-content">{{ msg.message }}</div>
           <div class="message-time">{{ formatTime(msg.created_at) }}</div>
@@ -41,9 +38,6 @@
 
     <!-- Message Input -->
     <div v-if="friend" class="chat-footer pa-2">
-      <v-btn icon class="mr-2">
-        <v-icon>mdi-paperclip</v-icon>
-      </v-btn>
       <v-text-field
         v-model="newMessage"
         placeholder="พิมพ์ข้อความ..."
@@ -160,25 +154,16 @@ export default {
 </script>
 
 <style scoped>
-.chat-window-container {
-  background-color: #F0F2F5;
-}
-
 .chat-header {
   border-bottom: 1px solid #e0e0e0 !important;
-  background-color: #F5F5F5;
 }
 
 .chat-area {
-  background-color: #EFEAE2; /* WhatsApp-like background */
   background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARMAAAARMAAQMAAAA/3/8OAAAABlBMVEXd3d3d3d3d3d0m875OAAAAAXRSTlMAQObYZgAAAB9JREFUeN7twQENAAAAwiD7p7bHBwwAAAAg7AEnYgAB9p0s9wAAAABJRU5ErkJggg==');
 }
 
-.message-row {
-  max-width: 75%;
-}
-
 .message-bubble {
+  max-width: 75%;
   padding: 6px 12px;
   border-radius: 12px;
   position: relative;
@@ -189,6 +174,7 @@ export default {
 .message-bubble.sent {
   background-color: #DCF8C6;
   border-top-right-radius: 0;
+  margin-left: auto;
 }
 
 .message-bubble.received {
@@ -198,28 +184,36 @@ export default {
 
 .message-content {
     padding-bottom: 16px; /* Space for time */
+    color: black !important;
 }
 
 .message-time {
     font-size: 0.7rem;
-    color: grey;
     position: absolute;
     bottom: 4px;
     right: 8px;
 }
 
 .chat-footer {
-  background-color: #F0F2F5;
   border-top: 1px solid #e0e0e0;
   display: flex;
   align-items: center;
 }
 
-.welcome-message {
-    background-color: #F0F2F5;
-}
-
 .v-text-field--filled.v-input--dense.v-text-field--single-line, .v-text-field--filled.v-input--dense.v-text-field--multi-line {
     border-radius: 20px;
+}
+
+/* Dark Theme Overrides */
+.theme--dark .message-bubble.received {
+  background-color: #262626 !important;
+}
+
+.theme--dark .message-bubble.sent {
+  background-color: #056162 !important;
+}
+
+.theme--dark .message-bubble.sent .message-content {
+  color: white !important;
 }
 </style>

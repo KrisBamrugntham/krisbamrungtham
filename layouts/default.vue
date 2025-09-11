@@ -1,7 +1,7 @@
 <template>
   <v-app>
-    <v-app-bar app color="white" elevation="2">
-      <v-toolbar-title class="font-weight-bold primary--text" style="cursor: pointer" @click="$router.push('/')">
+    <v-app-bar app elevation="2">
+      <v-toolbar-title class="font-weight-bold primary--text" style="cursor: pointer" @click="handleLogoClick">
         Edukris
       </v-toolbar-title>
       <v-spacer />
@@ -37,6 +37,7 @@
         <span class="font-weight-bold mr-4" style="font-size:1.1rem; color:#1976D2;">
           {{ userName }}
         </span>
+        <v-switch v-model="isDarkMode" class="mr-2 mt-0" hide-details></v-switch>
         <v-btn color="error" small @click="logout">
           Logout
         </v-btn>
@@ -72,9 +73,22 @@ export default {
       userRole: '',
       registerDialog: false,
       loginDialog: false,
+      isDarkMode: false,
+    }
+  },
+  watch: {
+    isDarkMode(val) {
+      this.$vuetify.theme.dark = val;
+      localStorage.setItem('theme.dark', val);
     }
   },
   mounted() {
+    const savedTheme = localStorage.getItem('theme.dark');
+    if (savedTheme) {
+      this.isDarkMode = JSON.parse(savedTheme);
+    }
+    this.$vuetify.theme.dark = this.isDarkMode;
+
     this.checkLoginStatus();
     window.addEventListener('storage', this.checkLoginStatus);
     this.$root.$on('show-register-dialog', this.showRegister);
@@ -110,6 +124,17 @@ export default {
     showRegister() {
       this.loginDialog = false;
       this.registerDialog = true;
+    },
+    handleLogoClick() {
+      if (this.isLoggedIn) {
+        if (this.$route.path !== '/index-login') {
+          this.$router.push('/index-login');
+        }
+      } else {
+        if (this.$route.path !== '/') {
+          this.$router.push('/');
+        }
+      }
     }
   }
 }

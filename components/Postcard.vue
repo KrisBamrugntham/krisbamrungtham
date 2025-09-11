@@ -7,7 +7,7 @@
       </v-avatar>
       <div>
         <div class="font-weight-bold">{{ post.username }}</div>
-        <div class="caption grey--text text--darken-1">{{ formatDate(post.created_at) }}</div>
+        <div class="caption">{{ formatDate(post.created_at) }}</div>
       </div>
       <v-spacer></v-spacer>
       <v-menu v-if="isOwner || isAdmin" offset-y>
@@ -46,6 +46,9 @@
         {{ post.content }}
       </v-card-text>
       <v-img v-if="post.image_url" :src="post.image_url" class="post-image mt-2" max-height="500"></v-img>
+      <div v-if="post.image_url && post.likes > 0" class="px-4 pb-2 text-right caption">
+        {{ post.likes }} คนถูกใจสิ่งนี้
+      </div>
     </div>
 
     <!-- Action Bar -->
@@ -59,7 +62,7 @@
         ความคิดเห็น
       </v-btn>
       <v-spacer></v-spacer>
-      <span v-if="post.likes > 0" class="caption grey--text mr-2">{{ post.likes }} คนถูกใจสิ่งนี้</span>
+      <span v-if="!post.image_url && post.likes > 0" class="caption mr-2">{{ post.likes }} คนถูกใจสิ่งนี้</span>
     </v-card-actions>
 
     <v-divider></v-divider>
@@ -296,7 +299,6 @@ export default {
 <style scoped>
 .post-card {
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
 }
 
 .post-content {
@@ -310,7 +312,6 @@ export default {
 }
 
 .comment-bubble {
-  background-color: #f0f2f5;
   border-radius: 18px;
   padding: 8px 12px;
 }
